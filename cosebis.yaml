@@ -1,0 +1,68 @@
+name: cosebis
+version: Jan 2023
+purpose: "Calculate cosebis from cls"
+url: " "
+interface: libcosebis.so
+attribution: [Marika Asgari, Patrick Simon]
+rules:
+    "If you use this module then please cite the papers below"
+cite:
+    - "https://arxiv.org/abs/1201.2669"
+    - "https://arxiv.org/abs/1601.00115"
+
+assumptions:
+    - "flat sky approximation"
+
+explanation: |
+    This code is able to calculate both En and Bn log-COSEBIs from https://arxiv.org/abs/1002.2136 
+    and dimensionless COSEBIs from https://arxiv.org/abs/2110.09774. 
+
+# List of parameters that can go in the params.ini file in the section for this module    
+params:
+        theta_min: "Float, minimum angular distance between galaxies in arcminutes. Default is 1."
+        theta_max: "Float, maximum angular distance between galaxies in arcminutes.  Default is 100."
+        n_max: "Intiger, maximum COSEBIs mode to be calculated: n=1,2,.., n_max. Default is 10."
+        input_section_name: "String section name for input cls. Default is shear_cl."
+        output_section_name: "String, section name for outputs. Default is cosebis."
+        Wn_Output_FolderName: "String, Folder name for Wn files. Default is ./cosebis/WnLog/."
+        Roots_n_Norms_FolderName: "String, Folder name for Roots and Normalisations. Default is ./cosebis/TLogsRootsAndNorms."
+        Tn_Output_FolderName:  "String, Folder name for Tn filters. Default is ./cosebis/TpnLog/"
+
+        cterm_section_name: "String, section name in values.ini for c-term parameters. Default is shear_c_bias."
+        add_c_term: "Integer, If >0 calculates the additive c-term correction, see Appendix D of https://arxiv.org/pdf/2007.15633.pdf. Default is 0."
+        inputCos4phi: "String, (optional) filename used for adding c-term, read from file if given otherwise look in block."
+        inputSin4phi: "String, (optional) filename used for adding c-term, read from file if given otherwise look in block."
+        input_sin4phi_section_name: "String, (optional) DEFAULT value is cosebis_sin4phi, will look in this section for the cosebis_sin4phi values, if file not given"
+        input_cos4phi_section_name: "String, (optional) DEFAULT value is cosebis_cos4phi, will look in this section for the cosebis_cos4phi values, if file not given."
+        
+        add_2D_cterm: "Intiger, (optional) DEFAULT is 0."
+        input_2Dcterm_filename: "String, (optional) filename to add 2D c-term. If not given look in block."
+        input_2D_section_name:  "String, (optional) where to look in the block for cosebis_2D." 
+
+
+inputs:
+    input_section_name:
+        ell: "Real 1d array, sample ell values for input C_ell"
+        nbin_a: "Integer, the number of redshift bins in the first quantity."
+        nbin_b: "Integer, the number of redshift bins in the second quantity. If nbin_a is not equal nbin_b gives an error."
+        nbin: "Integer, Number of redshift bins used if nbin_a or b not found."
+        bin_i_j: "Real 1d arrays C_ell (no l(l+1) factor) for bin i and j."
+    cterm_section_name:
+        Ac: "(optional) Amplitude of 2D cterm."
+        c1: "(optional) additive c-term 1."
+        c2: "(optional) additive c-term 2."
+
+outputs:
+    output_section_name:
+        n: "1D array of n-mode values for COSEBIs."
+        bin_i_j: "Real 1D array of En or Bn, for bin i and j."
+        nbin_a: "Integer, number of i tomographic bins"
+        nbin_b: "Integer, number of j tomographic bins"
+        theta_min: "theta_min in arcmin"
+        theta_max: "theta_max in arcmin"
+        nbin_a: "Integer, the number of redshift bins in the first quantity."
+        nbin_b: "Integer, the number of redshift bins in the second quantity. Currently nbin_a==nbin_b."
+
+
+
+
