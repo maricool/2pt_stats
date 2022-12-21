@@ -1,0 +1,21 @@
+# Add any directories, files, or patterns you don't want to be tracked by version control
+WnLog/
+BandPower*/
+!modules/
+!TLogsRootsAndNorms/
+Tplut_minus/
+example_files/inputs/xi*
+example_files/inputs/XI*
+Dimentionless_WnLog/
+*_pycache_*
+
+
+*.so
+*.so.dSYM
+*.a
+*.o
+
+modules/*.o
+
+*.*~
+.DS_Store
