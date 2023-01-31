@@ -1,8 +1,6 @@
 #ifndef MATRIX
 #define MATRIX
 
-using namespace std;
-
 #include <math.h>
 #include <iostream>
 #include <fstream>

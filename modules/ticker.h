@@ -1,8 +1,6 @@
 #ifndef TICKER_H
 #define TICKER_H
 
-using namespace std;
-
 #include "globaldef.h"
 
 #include <sys/time.h>

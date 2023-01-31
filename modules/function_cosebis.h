@@ -1,8 +1,6 @@
 #ifndef FUNCTION_COSEBIS_H
 #define FUNCTION_COSEBIS_H
 
-using namespace std;
-
 #include "globaldef.h"
 #include "ticker.h"
 #include "matrix.h"

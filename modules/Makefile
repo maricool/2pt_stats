@@ -19,7 +19,7 @@ HEADER   = $(OBJS:.o=.h)
 
 # make objects (components) of library
 %.o : %.cc 
-	$(CXX) $(USER_LDFLAGS) $(CXXFLAGS) ${USER_CXXFLAGS} -c $<
+	$(CXX)  $(CXXFLAGS) ${USER_CXXFLAGS} -c $<
 #%.o: %.cc
 #	$(CXX) -o $@ -c $(CXXFLAGS) $*.cc
 

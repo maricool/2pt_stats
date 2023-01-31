@@ -16,7 +16,7 @@
  number _atan(const number a){return atan(a);}
 
  //----------------------------------------------------------------------
-void matrix_error(char error_text[])
+void matrix_error(const char error_text[])
 {
   cerr << "Error"<<endl;
   cerr << error_text << endl;
@@ -1401,19 +1401,17 @@ void polarCoords(number x,number y,number z,
 
 matrix matrix::ScalarProduct(const matrix& mat2)
 {
-	if(rows==mat2.rows && columns==mat2.columns)
-	{
-		matrix product_mat(columns,rows);
-		//clog<<"rows="<<rows<<"  columns="<<columns<<endl;
-		for(int r=0; r<rows; r++)
-			for(int c=0; c<columns; c++)
-				product_mat.load(c,r,get(c,r)*mat2.get(c,r));
-		return product_mat;
-	}
-	else
-	{
-		matrix_error("dimentions don't match for scalar product");
-	}
+  if(rows!=mat2.rows || columns!=mat2.columns){
+    matrix_error("dimentions don't match for scalar product");    
+  }
+
+	matrix product_mat(columns,rows);
+
+	for(int r=0; r<rows; r++)
+		for(int c=0; c<columns; c++)
+			product_mat.load(c,r,get(c,r)*mat2.get(c,r));
+
+	return product_mat;
 }
 
 matrix matrix::diag()
