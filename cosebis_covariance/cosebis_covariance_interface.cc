@@ -139,8 +139,8 @@ extern "C"
 		//get Wn, Tn and output Tn folder names
 				//get Wn, Tn and output Tn folder names
 		string WnFolderName,TnFolderName,OutputTnFolderName;
-		WnFolderName="WnLog/";
-		TnFolderName="TLogsRootsAndNorms/";
+		WnFolderName= COSEBIS_DIR "WnLog/";
+		TnFolderName= COSEBIS_DIR "TLogsRootsAndNorms/";
 		OutputTnFolderName="TpnLog/";
 
 

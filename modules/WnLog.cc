@@ -5,8 +5,8 @@ WnLog::WnLog(): Wn_table()
 	l=thetamin=thetamax=1.;
 	n=0;
 	lthresh=0.;
-	TnFolderName="./cosebis/TLogsRootsAndNorms";
-	WnFolderName="./cosebis/WnLog/";
+	TnFolderName= COSEBIS_DIR "/TLogsRootsAndNorms";
+	WnFolderName= COSEBIS_DIR "/WnLog/";
 	WnFileName="WnLog";
 }
 

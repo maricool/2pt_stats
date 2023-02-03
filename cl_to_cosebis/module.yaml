@@ -45,15 +45,15 @@ params:
         Wn_Output_FolderName:
             meaning: "Folder name for Wn files."
             type: str
-            default: "./cosebis/WnLog/"
+            default: "cosebis_dir/WnLog/"
         Roots_n_Norms_FolderName:
             meaning: "Folder name for Roots and Normalisations."
             type: str
-            default: "./cosebis/TLogsRootsAndNorms"
+            default: "cosebis_dir/TLogsRootsAndNorms"
         Tn_Output_FolderName:
             meaning:  "Folder name for Tn filters"
             type: str
-            default: "./cosebis/TpnLog/"
+            default: "cosebis_dir/TpnLog/"
         cterm_section_name:
             meaning: "section name in values.ini for c-term parameters."
             type: str

@@ -3,7 +3,7 @@ include ${COSMOSIS_SRC_DIR}/config/compilers.mk
 #--- objects to build
 #-----------------------------------
 USER_LDFLAGS += -L${GSL_LIB}  -lgsl -lgslcblas
-USER_CXXFLAGS += -I${GSL_INC}
+USER_CXXFLAGS += -I${GSL_INC} -D COSEBIS_DIR="\"${PWD}/../\""
 
 ifneq (Darwin, $(OS))
   USER_CXXFLAGS+=-Wl,-rpath,${PWD}
@@ -12,7 +12,7 @@ endif
 
 OBJS     = matrix.o function_cosebis.o ticker.o tostring.o tolower.o timestamp.o \
 		   globaldef.o Integrate.o COSEBIs.o WnLog.o TpnLogRadian.o \
-		   BandPower_g.o BandPower_W.o BandPower.o
+		   BandPower_g.o BandPower_W.o BandPower.o errors.o
 
 LIBNAME  = libcolib.a
 

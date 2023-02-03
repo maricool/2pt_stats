@@ -14,7 +14,7 @@
 #include <vector>
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_spline.h>
-
+#include "errors.h"
 
 typedef number (WIREFUNC)(number);
 

@@ -20,7 +20,7 @@
 #include "TpnLogRadian.h"
 //This makes matrices and does matrix stuff (most of the functions are disables because they used NR)
 #include "matrix.h"
-
+#include "errors.h"
 
 /*
 
@@ -42,8 +42,8 @@ public:
 	~COSEBIs();
 	//Constructor calls initialize
 	void initialize(int nMaximum,number thetamin, number thetamax, int nPairs
-		,string WnFolderName1="./cosebis/WnLog/"
-		,string TnFolderName1="./cosebis/TLogsRootsAndNorms/"
+		,string WnFolderName1=COSEBIS_DIR "/WnLog/"
+		,string TnFolderName1=COSEBIS_DIR "/TLogsRootsAndNorms/"
 		,string OutputTnFolderName="./cosebis/TpnLog/");
 	//sets the number of redshift bins
 	void setZbins(int nPairs1);

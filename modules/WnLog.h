@@ -27,8 +27,8 @@ public:
 
 	WnLog();
 	WnLog(number thetamin1,number thetamax1,int nMax
-		,string TnFolderName="./cosebis/TLogsRootsAndNorms/"
-		,string WnFolderName="./cosebis/WnLog/"
+		,string TnFolderName=COSEBIS_DIR "/TLogsRootsAndNorms/"
+		,string WnFolderName=COSEBIS_DIR "/WnLog/"
 		,string WnFileName="WnLog");
 	~WnLog();
 
