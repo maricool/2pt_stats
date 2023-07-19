@@ -5,35 +5,185 @@ version: "1"
 purpose: "Bin 2pts"
 url: " "
 interface: 
-attribution: 
+attribution: [Marika Asgari]
 rules:
-    ""
+    "Please cite the paper below if you are using this module, which describes the weighted binning approach (Appendix A) and the 2D c-term."
 cite:
-    - ""
+    - "https://arxiv.org/pdf/1810.02353.pdf"
 
 assumptions:
-    - "Gaussian covariance for now"
-    - ""
+   - "Flat sky approximation"
 
 explanation: |
-    "
-    "
+    This module takes input functions and applies weighted binning on them. 
+    This is aimed mainly at shear two point correlation functions (2PCFS, xi_pm), but can be used for other functions as well.
+    It is also able to add shear c-term corrections to both xi_plus and xi_minus. 
+    There are a few option for binning. If bin edges are provided or can be calculated then the function is integrated between the bin edges 
+    with a weight that eiher comes from an input number of galaxy pairs file or if that is not available, will use theta weighting.
+    If bin edges cannot be calculated then will return the value of the function at the given arguments.
 
 # List of parameters that can go in the params.ini file in the section for this module    
 params:
-        theta_min: " minimum angular distance between galaxies"
-        theta_max: " maximum angular distance between galaxies"
-        n_max: "maximum COSEBIs mode to be calculated: n=1,2,.., n_max"
-        input_2pcfs_filename: "Input 2PCFs file, needs to be in Athena format"
-        input_cosebis_filename: "Input COSEBIs file name, for example measured from data, needs to be a binary file"
-        input_covariance_filename: "Input covariance matrix filename, needs to be a binary file"
-        is_it_bmodes: "If 0 calculates E-modes. If not B-modes. "
+        type:
+            meaning: "Type of two-point correlation function. Choose between plus and minus.
+                      Only used for additing the c-term error or when the input_section_name is not given."
+            type: str
+            default: "plus"
+        x_name:
+            meaning: "The name of the argument of the function that is binned. Although this module is aimed at binning xipm, 
+                      it can be used to bin any other function in one argument."
+            type: str
+            default: "theta"
+        output_section_name:
+            meaning: "Where the outputs will be saved in cosmosis block"
+            type: str
+            default: "xi_binned_"+type
+        input_section_name:
+            meaning: "Where the input functions to be binned are read from cosmosis block"
+            type: str
+            default: "shear_xi_"+type
+        theta_file_name:
+            meaning: "File name for a list of theta values for the binned functions. If not found will look for the next item."
+            type: str
+            default: ""
+        theta_list:
+            meaning: "A list of theta values for the binned functions. If not found will look for theta_min, theta_max and nTheta."
+            type: a list of doubles
+            default: ""
+        theta_min:
+            meaning: "Minimum angular distance between galaxies in arcminutes."
+            type: real
+            default: 1.0
+        theta_max:
+            meaning: "Maximum angular distance between galaxies in arcminutes."
+            type: real
+            default: 100.0
+        nTheta:
+            meaning: "Number of theta bins to use."
+            type: real
+            default: 100.0
+        theta_min_max_filename: 
+            meaning: "Optional, a file that includes two columns listing the minimum and the maximum theta (in arcminutes) 
+                      for each bin respectively. "
+            type: str
+            default: ""
+        weighted_binning:
+            meaning: "If non-zero will applying weighted binning, if either theta_min_max_filename is given or theta_min, theta_max and nTheta.
+                      If input napir files are given then will use them to do weighted binning otherwise will use a theta scaling to do weighted binning."
+            type: int
+            default: 1
+        InputNpair:
+            meaning: "Optional, input file name prefix for effective number of galaxy pairs. 
+                      The code assumes that each tomographic bin pair has a separate file with this naming:
+                      ${InputNpair}_nBins_${nBins}_Bin${i}_Bin${j}${InputNpair_suffix}
+                      where nBins = number of tomographic bins. i and j are the tomographic bin number starting from 1."
+            type: str
+            default: ""
+        InputNpair_suffix:
+            meaning: "Optional, Input file name suffix for effective number of galaxy pairs. 
+                      The code assumes that each tomographic bin pair has a separate file with this naming:
+                      ${InputNpair}_nBins_${nBins}_Bin${i}_Bin${j}${InputNpair_suffix}
+                      where nBins = number of tomographic bins. i and j are the tomographic bin number starting from 1."
+            type: str
+            default: ""
+        nBins_in:
+            meaning: "Optional, number of tomographic bins, used for reading the input galaxy pair files:
+                      ${InputNpair}_nBins_${nBins}_Bin${i}_Bin${j}${InputNpair_suffix}
+                      where nBins = number of tomographic bins. i and j are the tomographic bin number starting from 1."
+            type: str
+            default: ""
+        Column_Npair:
+            meaning: "Optional, the column number for number of galaxy pairs in the file. Columns start from 1."
+            type: int
+            default: 8
+        Column_theta:
+            meaning: "Optional, the column number for theta values in the file. Columns start from 1."
+            type: int
+            default: 1
 
+        add_c_term:
+            meaning: "If > 0 calculates the additive c-term correction, see Appendix D of https://arxiv.org/pdf/2007.15633.pdf for details."
+            type: int
+            default:  0
+        inputCos4phi:
+            meaning: "Optional filename used for adding c-term, read from file if given otherwise look in block. This is only used for xi_m."
+            type: str
+            default: ""
+        inputSin4phi:
+            meaning: "Filename used for adding c-term, read from file if given otherwise look in block. This is only used for xi_m."
+            type: str
+            default: ""
+        input_sin4phi_section_name:
+            meaning: "Optional - look in this section for the sin4phi values, if file not given. This is only used for xi_m."
+            type: str
+            default: "xim_sin4phi"
+        input_cos4phi_section_name:
+            meaning: "Optional - look in this section for the cos4phi values, if file not given. This is only used for xi_m."
+            type: str
+            default: "xim_cos4phi"
+
+        add_2D_cterm:
+            meaning: "Optional 2D c term."
+            type: int
+            default: 0
+        input_2Dcterm_filename:
+            meaning: "Optional filename to add 2D c-term. If not given look in block."
+            type: str
+            default: ""
+        input_2D_section_name:
+            meaning:  "Optional section name - where to look in the block for the 2D xipm." 
+            type: str
+            default:  "xi_2D"
+        
+        
 #Inputs for a given choice of a parameter, from the values.ini or from other modules
-#If no such choices, just do one of these omitting mode=something part:
 inputs:
-
+    input_section_name:
+        x_name:
+            meaning: "The functions argument values, this is usually theta."
+            type: real 1d
+            default: 
+        nbin_a:
+            meaning: "Number of redshift bins in the first quantity."
+            type: int
+            default:
+        nbin_b:
+            meaning: "Number of redshift bins in the second quantity. If nbin_a is not equal nbin_b gives an error."
+            type: int
+            default:
+        nbin:
+            meaning: "Number of redshift bins used if nbin_a or b not found."
+            type: int
+            default:
+        bin_i_j:
+            meaning: "The function value for bin i and j. The function is usually eiher xi_p or xi_m."
+            type: real 1d
+            default:
+    cterm_section_name:
+        Ac:
+            meaning: "(Optional) Amplitude of 2D cterm."
+            type: real
+            default:
+        c1:
+            meaning: "(Optional) additive c-term 1."
+            type: real
+            default:
+        c2:
+            meaning: "(Optional) additive c-term 2."
+            type: real
+            default:
 
 outputs:
-    likelihoods:
-        COSEBIs_LIKE: Gaussian likelihood for this data set and theory
+    output_section_name:
+        x_name_bin_i_j:
+            type: "real 1d"
+            meaning: "Array of argument values for each redshift bin pair i and j."
+        bin_i_j:
+            type: "real 1d"
+            meaning: "Array of binned function, usually xi_p or xi_m, for bin i and j."
+        nbin_a:
+            type: int
+            meaning: "Number of redshift bins in the first quantity."
+        nbin_b:
+            type: int
+            meaning: "Number of redshift bins in the second quantity. Currently nbin_a==nbin_b."
