@@ -2,7 +2,7 @@ name: cosebis
 version: Jan2023
 purpose: "Calculate COSEBIs from C_ell power spectra"
 url: ""
-interface: cl_to_cosebis_interface.so
+interface: cosebis_covariance_interface.so
 attribution: [Marika Asgari, Patrick Simon]
 rules:
     "If you use this module then please cite the papers below"
@@ -24,6 +24,7 @@ explanation: |
 
     This module calculates both E_n and B_n log-COSEBIs from https://arxiv.org/abs/1002.2136 
     and dimensionless COSEBIs from https://arxiv.org/abs/2110.09774. 
+
 
 # List of parameters that can go in the params.ini file in the section for this module    
 params:
@@ -47,6 +48,10 @@ params:
             meaning: "Section name for outputs."
             type: str
             default: cosebis
+        is_it_bmodes:
+            meaning: "If zero calculates E-modes otherwise B-modes covarince."
+            type: int
+            default: 0
         Wn_Output_FolderName:
             meaning: "Folder name for Wn files."
             type: str
@@ -59,6 +64,10 @@ params:
             meaning:  "Folder name for Tn filters"
             type: str
             default: COSEBIS_DIR "/TpnLog/"
+        cov_name:
+            meaning:  "Start of the output covariance name"
+            type: str
+            default: "EnCovarianceFromTheory"
         cterm_section_name:
             meaning: "section name in values.ini for c-term parameters."
             type: str
@@ -108,7 +117,7 @@ inputs:
             type: int
             default:
         nbin_b:
-            meaning: "Number of redshift bins in the second quantity. If nbin_a is not equal nbin_b gives an error."
+            meaning: "Number of redshift bins in the second quantity."
             type: int
             default:
         nbin:

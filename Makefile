@@ -8,6 +8,7 @@ ALL_LIBS = bin_cl/bin_cl_interface.so \
            xi_to_cosebis/xi_to_cosebis.so \
            cosebis_covariance/cosebis_covariance.so
 
+
 all: $(ALL_LIBS)
      
 $(COLIB): modules/*.cc modules/*.h
@@ -32,54 +33,6 @@ cosebis_covariance/cosebis_covariance.so: $(COLIB) cosebis_covariance/cosebis_co
 clean:
 	rm -rf */*.so */*.so.dSYM
 	cd modules && $(MAKE) clean
-
-
-
-# $(submodules): %: %/%_interface.cc
-# 	cd $@ && $(MAKE)
-
-# #-----------------------------------
-# #--- rules
-# #-----------------------------------
-# all: $(MODULE)/$(COLIB) libcosebis.so libcosebis_cov.so libbandpower.so libxipm_binned.so libcosebis_2pcfs.so 
-
-# # tells how to make my library (another makefile)
-
-# $(MODULE)/$(COLIB)::
-# 	cd $(MODULE) && $(MAKE)
-
-
-
-# *.so: COSEBIs_2PCFs_interface.cc
-# 	$(CXX) $(CXXFLAGS) COSEBIs_2PCFs_interface.cc -shared -o libcosebis_2pcfs.so $(LDFLAGS) $(USER_LDFLAGS)
-
-# libcosebis.so: COSEBIs_interface.cc
-# 	$(CXX) $(CXXFLAGS) COSEBIs_interface.cc -shared -o libcosebis.so $(LDFLAGS) $(USER_LDFLAGS)
-
-# libcosebis_cov.so: COSEBIs_covariance_interface.cc
-# 	$(CXX) $(CXXFLAGS) COSEBIs_covariance_interface.cc -shared -o libcosebis_cov.so $(LDFLAGS) $(USER_LDFLAGS)
-
-# libbandpower.so: BandPower_interface.cc
-# 	$(CXX) $(CXXFLAGS) BandPower_interface.cc -shared -o libbandpower.so $(LDFLAGS) $(USER_LDFLAGS)
-
-# libxipm_binned.so: xipm_binned.cc
-# 	$(CXX) $(CXXFLAGS) xipm_binned.cc -shared -o libxipm_binned.so $(LDFLAGS) $(USER_LDFLAGS)
-
-
-# # Clean up
-# .PHONY: clean
-# clean:
-# 	cd $(MODULE) && $(MAKE) clean
-# 	rm -f libcosebis.so
-# 	rm -f libcosebis_cov.so
-# 	rm -f libcosebis_2pcfs.so
-# 	rm -f libbandpower.so
-# 	rm -f libxipm_binned.so
-# 	test -n "./" && rm -rf ./libcosebis_2pcfs.so.dSYM/
-# 	test -n "./" && rm -rf ./libcosebis.so.dSYM/
-# 	test -n "./" && rm -rf ./libcosebis_cov.so.dSYM/
-# 	test -n "./" && rm -rf ./libbandpower.so.dSYM/
-# 	test -n "./" && rm -rf ./libxipm_binned.so.dSYM/
 
 	
 	
