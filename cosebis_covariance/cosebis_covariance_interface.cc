@@ -251,6 +251,7 @@ extern "C"
 			clog<<"Found Area="<<Area<<endl;
 			Area*=pow(pi/180.,2);//change to radians
 		}
+
 		cosebis->setNoise(Area,sigma_e,ngal_effective);
 
 		string inputCl_cov;
@@ -319,19 +320,19 @@ extern "C"
 		else
 			clog<<"Got the value of nBins="<<config->nBins<<endl;
 
-		string input_nPair_files_suffix;
-		status=options->get_val(sectionName, string("input_nPair_files_suffix"),input_nPair_files_suffix);
+		string input_nPair_files_prefix;
+		status=options->get_val(sectionName, string("input_nPair_files_prefix"),input_nPair_files_prefix);
 		if(status)
 		{
 			config->calNoiseCov=false;
-			clog<<"No input_nPair_files_suffix was given."<<endl;
+			clog<<"No input_nPair_files_preffix was given."<<endl;
 		}
 		else
 		{
 			config->calNoiseCov=true;
-			clog<<input_nPair_files_suffix<<" is the input nPair suffix."<<endl;
-			string input_nPair_files_suffix_end="";
-			status=options->get_val(sectionName, string("input_nPair_files_suffix_end"),input_nPair_files_suffix_end);
+			clog<<input_nPair_files_prefix<<" is the input nPair prefix."<<endl;
+			string input_nPair_files_suffix="";
+			status=options->get_val(sectionName, string("input_nPair_files_suffix"),input_nPair_files_suffix);
 			int Athena_input=1;
 			bool Athena= true;
 			status=options->get_val(sectionName, string("Athena_input"),Athena_input);
@@ -356,9 +357,9 @@ extern "C"
 				{
 					for(int bin2=bin1; bin2<config->nBins; bin2++)
 					{
-						string FileName=input_nPair_files_suffix+
+						string FileName=input_nPair_files_prefix+
 							+("_nBins_")+toString(config->nBins)+string("_Bin")
-							+toString(bin1+1)+string("_Bin")+toString(bin2+1)+input_nPair_files_suffix_end;
+							+toString(bin1+1)+string("_Bin")+toString(bin2+1)+input_nPair_files_suffix;
 						FileName_vec.push_back(FileName);
 					}
 				}
@@ -536,7 +537,7 @@ extern "C"
 
 		int n_max=config->n_max;
 
-		// prints out the En for the parameters used to calculate the covariance matrix.
+		// puts the En for the parameters used to calculate the covariance matrix in block
 		vector<number> En_vec(n_max);
 		vector<int> n_vals(n_max);
 		int p1=0;
