@@ -25,6 +25,19 @@ explanation: |
     This module calculates both E_n and B_n log-COSEBIs from https://arxiv.org/abs/1002.2136 
     and dimensionless COSEBIs from https://arxiv.org/abs/2110.09774. 
 
+    Outputs several files for the covaraince matrix. These are not passed to cosmosis block. 
+    The main covariance is called after the cov_name that user defines with a .ascii file type. 
+
+    Other covariances are calculated with the same starting name but different suffixes:
+    Sigma_m covaraince using input sigma_m: *_sigma_m_*.ascii
+    Sigma_m covaraince using inut cov_m: *_sigma_m_from_m_cov_*.ascii
+    Non-Gaussian covaraince: *_non_Gaussian.ascii
+    Theory B-mode covaraince (simple geometry): *_TheoryBn.ascii
+    B-mode and also noise only covaraince term using input galaxy number of pairs: *_NoiseOnly.ascii
+    Theory E-mode Gaussian covariance (simple geometry), does not input sigma_m cov: *_TheoryEn.ascii
+    Cosmic variance only term (simple geometry): *_TheoryCosmicVar.ascii
+    Mixed term (simple geometry): *_TheoryMixed.ascii
+    Gaussian En covaraince with the correct geometry for the noise term: *_NoiseJustForNoise.ascii
 
 # List of parameters that can go in the params.ini file in the section for this module    
 params:
@@ -48,10 +61,6 @@ params:
             meaning: "Section name for outputs."
             type: str
             default: cosebis
-        is_it_bmodes:
-            meaning: "If zero calculates E-modes otherwise B-modes covarince."
-            type: int
-            default: 0
         Wn_Output_FolderName:
             meaning: "Folder name for Wn files."
             type: str
@@ -61,50 +70,89 @@ params:
             type: str
             default: COSEBIS_DIR "/TLogsRootsAndNorms"
         Tn_Output_FolderName:
-            meaning:  "Folder name for Tn filters"
+            meaning:  "Folder name for Tn filters."
             type: str
             default: COSEBIS_DIR "/TpnLog/"
         cov_name:
-            meaning:  "Start of the output covariance name"
+            meaning: "Start of the output covariance name."
             type: str
             default: "EnCovarianceFromTheory"
-        cterm_section_name:
-            meaning: "section name in values.ini for c-term parameters."
+        sigma_e_file:
+            meaning: "Optional, file name that includes sigma_epsilon values"
             type: str
-            default: "shear_c_bias"
-        add_c_term:
-            meaning: "If > 0 calculates the additive c-term correction, see Appendix D of https://arxiv.org/pdf/2007.15633.pdf."
+            default: ""
+        sigma_e_file:
+            meaning: "Optional, file name that includes sigma_epsilon values. Note that the code expects 
+                      sigma_epsilon^2= sigma_e1^2 + sigma_e2^2 and devides them by sqrt(2) before using in covaraince calculation. "
+            type: str
+            default: ""
+        sigma_e:
+            meaning: "Optional, Sigma_epsilon values, this is read if sigma_e_file is not given. Note that the code expects 
+                      sigma_epsilon^2= sigma_e1^2 + sigma_e2^2 and devides them by sqrt(2) before using in covaraince calculation. "
+            type: a list of doubles 
+            default: ""
+        ngal_file:
+            meaning: "Optional, file name that includes only the effective number of galaxies per tomographic bin in 1/arcmin^2."
+            type: str
+            default: ""
+        ngal_effective:
+            meaning: "Optional, effective number of galaxies per tomographic bin in 1/arcmin^2. This is read if ngal_file is not given. 
+                      One of the two has to be given."
+            type: A list of doubles 
+            default: ""
+        Area:
+            meaning: "Effective area of your survey in square degrees."
+            type: double
+            default: ""
+        input_nonGaussian_Cl_cov:
+            meaning: "Optional, input non-Gaussian Cl covaraiance. This has to be calculated using an external code. 
+                    The ordering of covariance should be bin 11,12,13,...,22,23,...,nn for n tomographic bins. 
+                    The covariance need to be in matrix format."
+            type: double
+            default: ""
+        input_nonGaussian_Cl_ell_vec:
+            meaning: "Optional (needed if input_nonGaussian_Cl_cov is given), input ell values for the non-Gaussian Cl covaraiance. 
+                      The ell values are assumed to be the same for all tomo-bin combinations. This has to be calculated using an external code."
+            type: double
+            default: ""
+        sigma_m: 
+            meaning: "Optional, value of the error on shear m-bias calibration."
+            type: a list of doubles
+            default: ""
+        sigma_m_cov_file: 
+            meaning: "Optional, name of file containing the covariance of shear m-bias calibration. This is used instead of simga_m if given."
+            type: str
+            default: ""
+        nBins:
+            meaning: "Optional, number of tomographic bins. Only needed if ngal_pair is read from file."
             type: int
-            default:  0
-        inputCos4phi:
-            meaning: "Optional filename used for adding c-term, read from file if given otherwise look in block."
-            type: str
             default: ""
-        inputSin4phi:
-            meaning: "Filename used for adding c-term, read from file if given otherwise look in block."
-            type: str
-            default: ""
-        input_sin4phi_section_name:
-            meaning: "Optional - look in this section for the cosebis_sin4phi values, if file not given"
-            type: str
-            default: "cosebis_sin4phi"
-        input_cos4phi_section_name:
-            meaning: "Optional - look in this section for the cosebis_cos4phi values, if file not given."
-            type: str
-            default: "cosebis_cos4phi"
-        add_2D_cterm:
-            meaning: "Optional 2D c term."
+        input_nPair_files_prefix:
+            meaning: "Optional, prefix for the file names containing theta and effective number of galaxy pairs. 
+                      The assumption is that each tomo-bin combination is given in a separate file (for example Athena or Treecorr outputs). 
+                      Note that these need to be the weighted number of pairs! Each file has to have this naming format:
+                      $input_nPair_files_prefix_nBins_$nBins_Bin$bin1_Bin$bin2$input_nPair_files_suffix
+                      where nBins = number of tomographic bins
+                      bin1 and bin2 are the indices for the tomographic bins going from 1 to nBins."
             type: int
-            default: 0
-        input_2Dcterm_filename:
-            meaning: "Optional filename to add 2D c-term. If not given look in block."
-            type: str
             default: ""
-        input_2D_section_name:
-            meaning:  "Optional section name - where to look in the block for cosebis_2D." 
-            type: str
-            default:  ""
-
+        input_nPair_files_suffix:
+            meaning: "Optional, suffix for the file names containing theta and effective number of galaxy pairs. 
+                      The assumption is that each tomo-bin combination is given in a separate file (for example Athena or Treecorr outputs). 
+                      Note that these need to be the weighted number of pairs! Each file has to have this naming format: 
+                      $input_nPair_files_prefix_nBins_$nBins_Bin$bin1_Bin$bin2$input_nPair_files_suffix
+                      where nBins = number of tomographic bins
+                      bin1 and bin2 are the indices for the tomographic bins going from 1 to nBins."
+            type: int
+            default: ""
+        nPairs_column:
+            meaning: "Optional, the column number for number of galaxy pairs in the file. Columns start from 1."
+            type: int
+            default: 8
+        theta_column:
+            meaning: "Optional, the column number for theta values in the file. Columns start from 1."
+            type: int
+            default: 1
 
 inputs:
     input_section_name:
@@ -127,19 +175,6 @@ inputs:
         bin_i_j:
             meaning: "C_ell (no l(l+1) factor) for bin i and j."
             type: real 1d
-            default:
-    cterm_section_name:
-        Ac:
-            meaning: "(Optional) Amplitude of 2D cterm."
-            type: real
-            default:
-        c1:
-            meaning: "(Optional) additive c-term 1."
-            type: real
-            default:
-        c2:
-            meaning: "(Optional) additive c-term 2."
-            type: real
             default:
 
 outputs:
