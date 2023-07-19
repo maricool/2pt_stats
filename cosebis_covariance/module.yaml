@@ -51,7 +51,7 @@ params:
             default: 100.0
         n_max:
             meaning: "Maximum COSEBIs mode to be calculated: n=1,2,.., n_max."
-            type: integer
+            type: int
             default: 10
         input_section_name:
             meaning: "Section name for input cls."
@@ -89,7 +89,7 @@ params:
         sigma_e:
             meaning: "Optional, Sigma_epsilon values, this is read if sigma_e_file is not given. Note that the code expects 
                       sigma_epsilon^2= sigma_e1^2 + sigma_e2^2 and devides them by sqrt(2) before using in covaraince calculation. "
-            type: a list of doubles 
+            type: real 1d 
             default: ""
         ngal_file:
             meaning: "Optional, file name that includes only the effective number of galaxies per tomographic bin in 1/arcmin^2."
@@ -98,26 +98,26 @@ params:
         ngal_effective:
             meaning: "Optional, effective number of galaxies per tomographic bin in 1/arcmin^2. This is read if ngal_file is not given. 
                       One of the two has to be given."
-            type: A list of doubles 
+            type: real 1d 
             default: ""
         Area:
             meaning: "Effective area of your survey in square degrees."
-            type: double
+            type: real
             default: ""
         input_nonGaussian_Cl_cov:
             meaning: "Optional, input non-Gaussian Cl covaraiance. This has to be calculated using an external code. 
                     The ordering of covariance should be bin 11,12,13,...,22,23,...,nn for n tomographic bins. 
                     The covariance need to be in matrix format."
-            type: double
+            type: str
             default: ""
         input_nonGaussian_Cl_ell_vec:
             meaning: "Optional (needed if input_nonGaussian_Cl_cov is given), input ell values for the non-Gaussian Cl covaraiance. 
                       The ell values are assumed to be the same for all tomo-bin combinations. This has to be calculated using an external code."
-            type: double
+            type: str
             default: ""
         sigma_m: 
             meaning: "Optional, value of the error on shear m-bias calibration."
-            type: a list of doubles
+            type: real 1d
             default: ""
         sigma_m_cov_file: 
             meaning: "Optional, name of file containing the covariance of shear m-bias calibration. This is used instead of simga_m if given."
@@ -131,10 +131,10 @@ params:
             meaning: "Optional, prefix for the file names containing theta and effective number of galaxy pairs. 
                       The assumption is that each tomo-bin combination is given in a separate file (for example Athena or Treecorr outputs). 
                       Note that these need to be the weighted number of pairs! Each file has to have this naming format:
-                      $input_nPair_files_prefix_nBins_$nBins_Bin$bin1_Bin$bin2$input_nPair_files_suffix
+                      ${input_nPair_files_prefix}_nBins_${nBins}_Bin${i}_Bin${j}${input_nPair_files_suffix}
                       where nBins = number of tomographic bins
-                      bin1 and bin2 are the indices for the tomographic bins going from 1 to nBins."
-            type: int
+                      i and j are the indices for the tomographic bins going from 1 to nBins."
+            type: str
             default: ""
         input_nPair_files_suffix:
             meaning: "Optional, suffix for the file names containing theta and effective number of galaxy pairs. 
@@ -143,7 +143,7 @@ params:
                       $input_nPair_files_prefix_nBins_$nBins_Bin$bin1_Bin$bin2$input_nPair_files_suffix
                       where nBins = number of tomographic bins
                       bin1 and bin2 are the indices for the tomographic bins going from 1 to nBins."
-            type: int
+            type: str
             default: ""
         nPairs_column:
             meaning: "Optional, the column number for number of galaxy pairs in the file. Columns start from 1."
