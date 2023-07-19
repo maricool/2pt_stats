@@ -2,8 +2,6 @@
 #define INTEGRATE_H
 
 // Guass-Legendre integration 
-using namespace std;
-
 #include "globaldef.h"
 #include "function_cosebis.h"
 #include <gsl/gsl_integration.h>

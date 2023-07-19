@@ -9,7 +9,6 @@
 #define cnumber complex<number>
 #define SIZE(a) (int)a.size()
 
-using namespace std;
 
 #include <math.h>
 #include <complex>
@@ -23,6 +22,9 @@ using namespace std;
 #include <vector>
 
 #include "tolower.h"
+
+using namespace std;
+
 
 // pointer to simple function
 typedef number (*FUNC)(number);

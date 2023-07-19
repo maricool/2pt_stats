@@ -1066,8 +1066,9 @@ number COSEBIs::valueNoiseCov_fromInputNpair(int n1,int m1, int np,int bin1,int 
 	}
 	else
 	{
-		clog<<"not a recognised option for binning of Npair, exiting now"<<endl;
+		clog<<"not a recognised option for binning of Npair - returning nan"<<endl;
 		clog<<endl;
+		return NAN;
 	// 	for(int i=0; i<Npair_mat_vec[np].rows; i++)
 	// 	{
 	// 		number deltaTheta=(Npair_mat_vec[np].get(0,i+1)-Npair_mat_vec[np].get(0,i));

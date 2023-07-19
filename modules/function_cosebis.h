@@ -1,8 +1,6 @@
 #ifndef FUNCTION_COSEBIS_H
 #define FUNCTION_COSEBIS_H
 
-using namespace std;
-
 #include "globaldef.h"
 #include "ticker.h"
 #include "matrix.h"
@@ -16,7 +14,7 @@ using namespace std;
 #include <vector>
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_spline.h>
-
+#include "errors.h"
 
 typedef number (WIREFUNC)(number);
 

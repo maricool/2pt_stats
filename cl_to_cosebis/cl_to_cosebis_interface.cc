@@ -1,8 +1,8 @@
 ///for c++ use the .hh and for c the .h version
 //This deals with the inputs and outputs
-#include "cosmosis/datablock/datablock.hh"
+#include "datablock/datablock.hh"
 //This is just a header file which defines the different section names
-#include "cosmosis/datablock/section_names.h"
+#include "datablock/section_names.h"
 #include <typeinfo>
 
 /*CosmoSIS interface file for going from shear C(l) to E/B - COSEBIs
@@ -278,10 +278,11 @@ extern "C" {
 
 		//get Wn, Tn and output Tn folder names
 		string WnFolderName,TnFolderName,OutputTnFolderName;
-		WnFolderName="WnLog/";
-		TnFolderName="TLogsRootsAndNorms/";
-		OutputTnFolderName="TpnLog/";
+		WnFolderName = COSEBIS_DIR  "WnLog/";
+		TnFolderName = COSEBIS_DIR  "TLogsRootsAndNorms/";
+		OutputTnFolderName= COSEBIS_DIR  "TpnLog/";
 
+		clog << "WnFolderName = " << WnFolderName << endl;
 
 		status=options->get_val<string>(sectionName, string("Wn_Output_FolderName"), WnFolderName);
 		if(status)
@@ -324,7 +325,7 @@ extern "C" {
 
 	DATABLOCK_STATUS execute(cosmosis::DataBlock *block, void *config_in) 
 	{
-
+		enable_gsl_error_handling();
 		// Config is whatever you returned from setup above
 		// Block is the collection of parameters and calculations for
 		// this set of cosmological parameters
@@ -531,6 +532,7 @@ extern "C" {
 		status = block->put_val<double>(config->output_section_name, string("nbin_a"), num_z_bin_A);
 		status = block->put_val<double>(config->output_section_name, string("nbin_b"), num_z_bin_B);
 		
+		disable_gsl_error_handling();
 		return status;
 	}
 }// end of extern C

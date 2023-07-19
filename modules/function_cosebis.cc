@@ -165,8 +165,9 @@ void function_cosebis::makeTable(number from, number to, int N, bool logarithmic
 	ticker clock;
 	for(n=0;n<N;n++)
 	{
-		if (n>0 && !(n%((int) (N/20))))
+		if (n>0 && !(n%((int) (N/20)))){
 			clock.tick(1.*n/N);
+    }
 
 		x = tableStart+(tableEnd-tableStart)/(N-1.0)*n;
 		if (!logTable)

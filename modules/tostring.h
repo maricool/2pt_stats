@@ -1,10 +1,10 @@
 #ifndef TOSTRING_H
 #define TOSTRING_H
 
-using namespace std;
-
 #include <string>
 #include <strstream>
+
+using namespace std;
 
 /** Original code by Patrick Simon
  * 

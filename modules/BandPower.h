@@ -5,6 +5,7 @@
 #include "Integrate.h"
 #include <gsl/gsl_sf_bessel.h>
 #include "BandPower_W.h"
+#include "errors.h"
 
 
 // Written by Marika Asgari

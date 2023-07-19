@@ -19,3 +19,4 @@ modules/*.o
 
 *.*~
 .DS_Store
+*.so.dSYM
