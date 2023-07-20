@@ -2,7 +2,7 @@ include ${COSMOSIS_SRC_DIR}/config/compilers.mk
 
 COLIB     = modules/libcolib.a
 
-ALL_LIBS = bandpowers/bandpowers_interface.so \
+ALL_LIBS = band_powers/band_powers_interface.so \
            bin_xi/bin_xi_interface.so \
            cl_to_cosebis/cl_to_cosebis.so \
            xi_to_cosebis/xi_to_cosebis.so \
@@ -15,8 +15,8 @@ $(COLIB): modules/*.cc modules/*.h
 	cd modules && $(MAKE)
 
 
-bandpowers/bandpowers_interface.so: $(COLIB) bandpowers/bandpowers_interface.cc
-	cd bandpowers && $(MAKE)
+band_powers/band_powers_interface.so: $(COLIB) band_powers/band_powers_interface.cc
+	cd band_powers && $(MAKE)
 
 bin_xi/bin_xi_interface.so: $(COLIB) bin_xi/bin_xi_interface.cc
 	cd bin_xi && $(MAKE)
