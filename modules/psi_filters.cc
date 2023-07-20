@@ -11,18 +11,18 @@ psi_filters::~psi_filters(){}
 //------------------------------Setup-------------------------------------//
 //------------------------------------------------------------------------//
 
-psi_filters::psi_filters(number minTH, number maxTH, int Bins, int Nmax,
-	number LMIN, number LMAX, int LBINS, int Nmin,string FolderName,string WFileName)
+psi_filters::psi_filters(number minTH, number maxTH, int Bins, int nMaximum,
+	number LMIN, number LMAX, int LBINS,string FolderName,string WFileName)
 {
-	initialise(minTH, maxTH, Bins, Nmax,LMIN, LMAX, LBINS, Nmin,FolderName,WFileName);
+	initialise(minTH, maxTH, Bins, nMaximum,LMIN, LMAX, LBINS,FolderName,WFileName);
 }
 
-void psi_filters::initialise(number minTH, number maxTH, int Bins, int Nmax,
-	number LMIN, number LMAX, int LBINS, int Nmin,string FolderName,string WFileName)
+void psi_filters::initialise(number minTH, number maxTH, int Bins, int nMaximum,
+	number LMIN, number LMAX, int LBINS,string FolderName,string WFileName)
 {
 	clog << "Initializing psi_filters" << endl;
 	setValues(minTH, maxTH, Bins, LMIN, LMAX, LBINS);
-	initialize_mode(Nmax,Nmin);
+	initialize_mode(nMaximum);
 	setNames(FolderName,WFileName);
 }
 
@@ -45,10 +45,10 @@ void psi_filters::setValues(number minTH, number maxTH, int Bins, number LMIN,
 	clog<<"lmin="<<lmin<<" lmax="<<lmax<<" lbins="<<lbins<<endl;
 }
 
-void psi_filters::initialize_mode(int m_max, int m_min)
+void psi_filters::initialize_mode(int nMaximum1)
 { 
-	Nmodes=m_max; 
-	mode=m_min;
+	nMaximum=nMaximum1; 
+	mode=1;
 }
 
 void psi_filters::setNames(string FolderName1,string WFileName1)
@@ -189,86 +189,6 @@ number psi_filters::valueFuncW(number l, number x)
 	return resultG/lmode/lmode;
 }
 
-//not used
-// vector<double> psi_filters::determine_integration_limits(number last_x_value)
-// {
-// 	//The value where the input function begins
-// 	number first_x_value = thetaMin;
-
-//     //number of bins for the table of the oscillating function, you can play with this to see what effect it has on the function.
-// 	const int Nbins = 10000000;
-
-
-// 	// make table of the function values on a very fine grid
-//     vector<number> table_y(Nbins);
-//     vector<number> table_x(Nbins);
-
-//     // free old list, very important with vectors to do this. Easy to forget and mess up everything.
-//     vector<double> integ_limits;
-// 	integ_limits.clear();
-
-// 	clog << "Trying to find the minimum and maximum points of the integrant of W for a given l=" << lmode << endl;
-// 	// clog << "Tmin= " << first_x_value << ", Tmax = " << last_x_value << endl;
-
-// 	for(int i=0;i<Nbins;i++)
-// 	{
-//         table_x[i]=first_x_value+(last_x_value-first_x_value)/(Nbins-1.)*i;
-//         table_y[i]=integrant(table_x[i]);
-
-// 	}
-
-// 	clog << "Finished the minimum and maximum points of the integrant of W for a given l=" << lmode << endl;
-
-// 	// go through list and pick minima/maxima (sort-of; does not need to be awfully exact)
-// 	integ_limits.push_back(first_x_value);
-
-// 	for(int i=1;i<Nbins-1;i++)
-// 	{
-// 		if (((table_y[i-1]<table_y[i]) && (table_y[i+1]<table_y[i]))
-// 		 || ((table_y[i-1]>table_y[i]) && (table_y[i+1]>table_y[i])))
-// 		{
-// 			integ_limits.push_back(table_x[i]);
-// 		}
-// 	}
-
-// 	integ_limits.push_back(last_x_value);
-
-//     return integ_limits;
-// }
-
-
-// void psi_filters::get_Integrant(){
-
-// 	//The value where the input function begins
-// 	number first_x_value = thetaMin;
-// 	number deltaTheta = last_x_value-first_x_value;
-// 	int Nbins = 1000;
-
-// 	// make table of the function values on a very fine grid
-//     vector<number> theta_vector(Nbins);
-//     vector<number> W_gg_integrant_vector(Nbins);
-//     vector<vector<number> > W_gg_integrant_vec_vec;
-
-
-//     for (int modeIN=1; modeIN<=Nmax; modeIN++){
-
-//     	W_gg_integrant_vector.clear();
-
-// 		for(int i=0;i<Nbins;i++)
-
-// 			{
-//                 //here I'm making a log table, but you can do linear depending on what your function is. 
-//                 theta_vector[i]=first_x_value+deltaTheta/(Nbins-1.)*i;
-//                 W_gg_integrant_vector[i]=integrant_Wgg(theta_vector[i]);
-//             }
-
-//         if (modeIN==0){}
-//         W_gg_integrant_vec_vec.push_back(W_gg_integrant_vector);
-
-// 		}
-
-	
-// }
 
 //------------------------------------------------------------------------//
 //---------------------------Integrants-----------------------------------//
@@ -382,13 +302,13 @@ number psi_filters::radians_to_arcmin(number theta)
 //------------------------------------------------------------------------//
 
 
-void psi_filters::set(int order, string WnFileName)
+void psi_filters::set(int n, string WnFileName)
 {
 	/*
 	This function first checks if the WFilters file exists.
 	If it does, then function cosebis just reads in file.
 	*/
-	mode = order;
+	mode = n;
 
 	clog << "\n \n In  psi_filters::set, setting up the W filters" << endl;
 	clog << "Theta min (arcmin): " << radians_to_arcmin(thetaMin) << ", Theta max (arcmin): " <<  radians_to_arcmin(thetaMax) << endl;

@@ -24,18 +24,18 @@ class psi_filters : public function_cosebis
 		~psi_filters();
 
 		// Initialize the global parameters for the functions
-		psi_filters(double minTH, double maxTH, int Bins, int Nmax, double LMIN, 
-			double LMAX, int LBINS, int Nmin=1,
+		psi_filters(double minTH, double maxTH, int Bins, int nMaximum1, double LMIN, 
+			double LMAX, int LBINS,
 			string FolderName="../psi/WFilters/",
 			string WFileName="W_psi");
 
-		void initialise(double minTH, double maxTH, int Bins, int Nmax,double LMIN, 
-			double LMAX, int LBINS, int Nmin,string FolderName,string WFileName);
+		void initialise(double minTH, double maxTH, int Bins, int nMaximum1,double LMIN, 
+			double LMAX, int LBINS,string FolderName,string WFileName);
 
 		//^^^^ calls the next two functions to set the parameters
 		void setValues(double minTH, double maxTH, int Bins, double LMIN, double LMAX, int LBINS);
 		// Sets the maximum mode being analysed.
-		void initialize_mode( int m_max, int m_min=1);
+		void initialize_mode(int nMaximum);
 		void setNames(string FolderName1,string WFileName1);
 		//This calculates W_gg(l) for a given l
 		double get( double l); 
@@ -70,22 +70,7 @@ class psi_filters : public function_cosebis
 
 	private:
 
-		/* Global parameters of the class 
-
-		+ mode = COSEBI's mode currently being analysed.
-		+ Nmodes = Maximum mode analysed.
-		+ thetabins = No. of thetabins (linspace) analysed by ATHENA.
-		+ lbins = No. of (logspace) lbins in the integral over power spectra to obtain the FAB stats.
-
-		+ thetaMin,thetaMax = Theta range of statistics.
-		+ thetaBar = (thetaMin+thetaMax)/2.
-		+ deltaTheta = thetaMax - thetaMin.
-		+ lmin,lmax = ell-limits of Cl integral.
-		+ lmode = current ell of which the statistic is being analysed.
-
-		*/
-
-		int mode, Nmodes, thetaBins, lbins; 
+		int mode, nMaximum, thetaBins, lbins; 
 		double thetaMin, thetaMax, thetaBar, deltaTheta, lmin, lmax, lmode;
 		vector<double> all_roots;
 
@@ -94,8 +79,6 @@ class psi_filters : public function_cosebis
 
 		string FolderName,WFileName;
 		string integration_type;
-		//vector<number> BesselJ0_Zeros;
-
 
 };
 
