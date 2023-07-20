@@ -3,9 +3,13 @@ WnLog/
 BandPower*/
 !modules/
 !TLogsRootsAndNorms/
+!band_powers/
+!bin_xi/
+!cl_to_cosebis/
+!cosebis_covariance/
+!calRoots_Norms/
+!Dimentionless_TLogsRootAndNorms/
 Tplut_minus/
-example_files/inputs/xi*
-example_files/inputs/XI*
 Dimentionless_WnLog/
 *_pycache_*
 
