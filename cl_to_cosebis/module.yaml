@@ -2,7 +2,7 @@ name: cosebis
 version: Jan2023
 purpose: "Calculate COSEBIs from C_ell power spectra"
 url: ""
-interface: cl_to_cosebis_interface.so
+interface: cl_to_cosebis.so
 attribution: [Marika Asgari, Patrick Simon]
 rules:
     "If you use this module then please cite the papers below"

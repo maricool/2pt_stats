@@ -1,8 +1,8 @@
 ///for c++ use the .hh and for c the .h version
 //This deals with the inputs and outputs
-#include "datablock/datablock.hh"
+#include "cosmosis/datablock/datablock.hh"
 //This is just a header file which defines the different section names
-#include "datablock/section_names.h"
+#include "cosmosis/datablock/section_names.h"
 #include <typeinfo>
 
 /*CosmoSIS interface file for going from shear C(l) to E/B - COSEBIs
@@ -388,7 +388,6 @@ extern "C" {
 		//here is where we read in the Cls and calculate COSEBIs
 		int start_ind=0;
 		int start_ind_2D=0;
-		int nPairs=0;
 		for (int i_bin=1; i_bin<=num_z_bin_A; i_bin++) 
 		{
 			for (int j_bin=1; j_bin<=num_z_bin_B; j_bin++) 
@@ -400,7 +399,6 @@ extern "C" {
 				bool has_val = block->has_val(config->input_section_name, name_in);
 				if (has_val) 
 				{
-					nPairs++;
 					//if C(l) exists then read in
 					status = block->get_val<vector<number> >(config->input_section_name, name_in, C_ell);
 					
@@ -416,7 +414,6 @@ extern "C" {
 					//now add c-term contributions
 					if(config->add_c_term)
 					{
-						
 						number c1=0.;
 						number c2=0.;
 
@@ -469,7 +466,7 @@ extern "C" {
 								exit(1);
 							}
 						}
-					 	//this is the additional contribution due to constant cterm
+					 	//this is the additional contribution due to constant cterm see appendix D of https://arxiv.org/abs/2007.15633
 						En_mat+=(c1*c1-c2*c2)*En_cos4phi+2.*c1*c2*En_sin4phi;
 					}
 
@@ -515,22 +512,27 @@ extern "C" {
 								exit(1);
 							}
 				        }
-				        //this is the contribution due to 2D cterm
+				        //this is the contribution due to 2D cterm see section 5.1.2 of https://arxiv.org/abs/1810.02353
 						En_mat+=Ac*En_2D;
 					}
 
+					// turning the matrix into a vector to be saved in block
 					vector<number> En_vec(En_mat.rows);
 					for(int m=0 ;m<En_mat.rows ;m++)
 					{
 						En_vec[m]=En_mat.get(m);
 					}
-					
 					status = block->put_val<vector<number> >(config->output_section_name, name_in, En_vec);
+
 				}
 			}
 		}
 		status = block->put_val<double>(config->output_section_name, string("nbin_a"), num_z_bin_A);
 		status = block->put_val<double>(config->output_section_name, string("nbin_b"), num_z_bin_B);
+		status = block->put_val(config->output_section_name, "theta_min", config->theta_min);
+    	status = block->put_val(config->output_section_name, "theta_max", config->theta_max);
+		status = block->put_val(config->output_section_name, "input_section_name", config->input_section_name);
+
 		
 		disable_gsl_error_handling();
 		return status;
