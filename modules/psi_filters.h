@@ -8,6 +8,8 @@
 #include "matrix.h"
 #include "Integrate.h"
 
+// Wgm is not correct probably, Q needs to be fixed
+
 class psi_filters : public function_cosebis
 {
 	public:
