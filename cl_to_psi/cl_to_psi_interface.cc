@@ -1,7 +1,6 @@
 #include "cosmosis/datablock/datablock.hh"
 #include "cosmosis/datablock/section_names.h"
 #include "psi_stats.h"
-#include "matrix.h"
 
 
 using namespace std;
@@ -10,15 +9,10 @@ extern "C" {
 
 typedef struct psi_config 
 {
-    int nmode;                           // this is the maximum number of modes analysed
+    int nMaximum;                        // this is the maximum number of modes analysed
     number theta_min;                    // theta_min this is the minimum scale analysed
     number theta_max;                    // theta_max this is the maximum scale analysed
-    int ell_bins;                        // no. of ell bins which the W-filters are calculated at
-    number ell_min;                      // minimum ell-scale used in the Cl-integration
-    number ell_max;                      // maximum ell-scale used in the Cl-integration
     psi_stats *psi;                      // Pointer to the object of the class psi_stats
-    int Integ_nsteps;                    // No. of integration steps for Cl->psi Integral
-    number set_lthresh;                  // If want to set l-thresh
     string input_section_name;           // Input section name where Cl resides.
     string output_section_name;          // Section name for outputs
     string type;                         // type of integration: either gg or gm
@@ -45,10 +39,6 @@ int get_option(cosmosis::DataBlock * options, const string &name, string &parame
 void * setup(cosmosis::DataBlock * options, cosmosis::DataBlock * block)
 {
 
-    clog<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"<<endl;
-    clog<<"In setup of cl_to_psi_interface"<<endl;
-    clog<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"<<endl;
-
     psi_config * config = new psi_config;
 
     DATABLOCK_STATUS status = (DATABLOCK_STATUS)0;
@@ -56,8 +46,8 @@ void * setup(cosmosis::DataBlock * options, cosmosis::DataBlock * block)
 
 
     string WFolderName,WFileName;
-    number thetamin,thetamax,ellmin,ellmax,set_lthresh,step_size;
-    int n_modes,ellbins,tins,tcorr,mbins,Nstep_Integ,lbins_for_file;
+    number ellmin,ellmax;
+    int ellbins;
 
 
 
@@ -68,7 +58,7 @@ void * setup(cosmosis::DataBlock * options, cosmosis::DataBlock * block)
         clog<<"setting to default: gg"<<endl;
     }
     else
-        clog<<"got the value of type:"<<config->type<<endl;
+        clog<<"type = "<<config->type<<endl;
 
 
     status = options->get_val<string>(OPTION_SECTION, string("input_section_name"), config->input_section_name);
@@ -76,17 +66,18 @@ void * setup(cosmosis::DataBlock * options, cosmosis::DataBlock * block)
     {
         if( (config->type) == "gg")
         {
-            config->input_section_name = "galaxy_galaxy_cl";
+            config->input_section_name = "galaxy_cl";
         }
         else if ( (config->type) == "gm")
         {
-             config->input_section_name = "galaxy_matter_cl";
+             config->input_section_name = "galaxy_shear_cl";
         }
         else
         {
             clog<<"WARNINING!!!!!!!! not a recognised type ="<<config->type<<" use gg or gm or set input_section_name manually"<<endl;
             clog<<"setting config->type to "<<"gg"<<endl;
             config->type = "gg";
+            config->input_section_name = "galaxy_cl";
         }
 
         clog<<"Could not load input_section_name to psi, used type to set its value to "<<config->input_section_name<<endl;
@@ -99,17 +90,18 @@ void * setup(cosmosis::DataBlock * options, cosmosis::DataBlock * block)
     {
         if ( (config->type) == "gg")
         {
-            config->output_section_name = "galaxy_galaxy_psi";
+            config->output_section_name = "galaxy_psi";
         }
         else if ( (config->type) == "gm")
         {
-             config->output_section_name = "galaxy_matter_psi";
+             config->output_section_name = "galaxy_shear_psi";
         }
         else
         {
             clog<<"WARNINING!!!!!!!! not a recognised type ="<<config->type<<" use gg or gm or set output_section_name manually"<<endl;
             clog<<"setting config->type to "<<"gg"<<endl;
             config->type = "gg";
+            config->output_section_name = "galaxy_psi";
         }
 
         clog<<"Could not load output_section_name to psi, used type to set its value to "<<config->output_section_name<<endl;
@@ -119,33 +111,33 @@ void * setup(cosmosis::DataBlock * options, cosmosis::DataBlock * block)
 
 
 
-    status = options->get_val(OPTION_SECTION, "theta_min",1., thetamin);
+    status = options->get_val(OPTION_SECTION, "theta_min",1., config->theta_min);
     if (status) 
     {
         clog<<"Could not load theta_min to psi,";
-        clog<<"setting to default: "<<thetamin<<endl;
+        clog<<"setting to default: "<<config->theta_min<<endl;
     }
     else
-        clog<<"theta_min (arcmin) = "<<thetamin<<endl;
+        clog<<"theta_min (arcmin) = "<<config->theta_min<<endl;
 
-    status = options->get_val(OPTION_SECTION, "theta_max",100., thetamax);
+    status = options->get_val(OPTION_SECTION, "theta_max",100., config->theta_max);
     if (status) 
     {
         clog<<"Could not load theta_max to psi,";
-        clog<<"setting to default: "<<thetamin<<endl;
+        clog<<"setting to default: "<<config->theta_max<<endl;
     }
     else
-        clog<<"theta_max (arcmin) = "<<thetamax<<endl;
+        clog<<"theta_max (arcmin) = "<<config->theta_max<<endl;
 
 
-    status = options->get_val(OPTION_SECTION, "n_modes",10, n_modes);
+    status = options->get_val(OPTION_SECTION, "n_max",10, config->nMaximum);
     if (status) 
     {
-        clog<<"Could not load n_modes to psi,";
-        clog<<"setting to default: "<<thetamin<<endl;
+        clog<<"Could not load n_max to psi,";
+        clog<<"setting to default: "<<config->nMaximum<<endl;
     }
     else
-        clog<<"n_modes="<<n_modes<<endl;
+        clog<<"n_max="<<config->nMaximum<<endl;
 
 
     status = options->get_val(OPTION_SECTION, "l_min",1.0, ellmin);
@@ -157,7 +149,7 @@ void * setup(cosmosis::DataBlock * options, cosmosis::DataBlock * block)
     else
         clog<<"l_min="<<ellmin<<endl;
 
-    status = options->get_val(OPTION_SECTION, "l_max",1.0, ellmax);
+    status = options->get_val(OPTION_SECTION, "l_max",1e6, ellmax);
     if (status) 
     {
         clog<<"Could not load l_max to psi,";
@@ -166,48 +158,32 @@ void * setup(cosmosis::DataBlock * options, cosmosis::DataBlock * block)
     else
         clog<<"l_max="<<ellmax<<endl;
 
+    status = options->get_val(OPTION_SECTION, "l_bins",1000, ellbins);
+    if (status) 
+    {
+        clog<<"Could not load l_bins to psi,";
+        clog<<"setting to default: "<<ellbins<<endl;
+    }
+    else
+        clog<<"l_bins="<<ellbins<<endl;
+
 
     string WnFolderName;
     WnFolderName = COSEBIS_DIR  "Wn_psi/";
 
-
-    options->get_val(OPTION_SECTION, "lthresh",10., set_lthresh); //we should fix this to a value
-    options->get_val(OPTION_SECTION, "step_size",0.02, step_size);
     options->get_val<string>(OPTION_SECTION, string("W_output_folder_name"), WFolderName);
     options->get_val<string>(OPTION_SECTION, string("W_file_name"),"W_psi", WFileName);
 
     clog<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"<<endl;
-    clog<<"The Setup parameters are:"<<endl;
-    clog<<endl;
 
-    clog << "theta_min = " << thetamin << endl;
-    clog << "theta_max = " << thetamax << endl;
-    clog << "nmodes = " << n_modes << endl;
-    clog << "l_bins = " << ellbins << endl;
-    clog << "l_min = " << ellmin << endl;
-    clog << "l_max = " << ellmax << endl;
-    clog << "Integration_Steps = " << Nstep_Integ << endl;
-    clog << "lthresh = " << set_lthresh << endl;
-
-    clog<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"<<endl;
-    clog<<endl<<endl;
-
-    psi_stats *psi = new psi_stats(thetamin, thetamax, tins, ellmin, ellmax, ellbins,
-                                    Nstep_Integ, set_lthresh,WFolderName,WFileName);
+    psi_stats *psi = new psi_stats(config->theta_min, config->theta_max, ellmin, ellmax, ellbins,WFolderName,WFileName);
     
-    psi->setWFilters(n_modes);
+    psi->setWFilters(config->nMaximum);
 
     config->psi=psi;
-    config->nmode = n_modes;
-    config->theta_min = thetamin;
-    config->theta_max = thetamax;
-    config->ell_bins = ellbins;
-    config->ell_min = ellmin;
-    config->ell_max = ellmax;
-    config->Integ_nsteps = Nstep_Integ;
-    config->set_lthresh = set_lthresh;
 
 return (void *) config;
+
 }
 
 
@@ -222,25 +198,12 @@ return (void *) config;
   
 DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config_in)
 {
-    // clog<<endl<<endl;
-    // clog<<"?????????????????????????????????????????????"<<endl;
-    // clog<<"-------------In Psi execute------------------"<<endl;
-    // clog<<"?????????????????????????????????????????????"<<endl;
-    // clog<<endl;
-
-    ///------------------------------------------------------------------------------------------///
-    ///------------------------------------------------------------------------------------------///
+    enable_gsl_error_handling();
 
     DATABLOCK_STATUS status = (DATABLOCK_STATUS)0;
     const DATABLOCK_STATUS failure = (DATABLOCK_STATUS)1;
-
     psi_config * config = (psi_config*) config_in;
 
-    vector<double> psi;         // Container for the psi vectors
-    double val; 
-
-
-    //first do ggl
     //get the number of redshift bins from cosmosis
     int num_z_bin_A;
     int num_z_bin_B;
@@ -265,8 +228,9 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config_in)
         }
     }
 
-    vector<number> ell,logell;
+
     //get ell vector
+    vector<number> ell,logell;
     status = block->get_val(config->input_section_name, string("ell"), ell);
     if (status) 
     {
@@ -275,7 +239,7 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config_in)
     }
 
     int nell=ell.size();
-    //make logell to send to psi_statss
+    //make logell to send to psi_stats
     for(int i=0; i<nell; i++)
     {
         logell.push_back(log(ell[i]));
@@ -283,7 +247,7 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config_in)
 
 
     vector<int> n_vals;
-    for(int n=0; n<config->nmode+1; n++)
+    for(int n=0; n<config->nMaximum; n++)
         n_vals.push_back(n+1);
 
     for (int i_bin=1; i_bin<=num_z_bin_A; i_bin++) 
@@ -294,20 +258,17 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config_in)
             vector<number> psi_vec;
             string name_in=string("bin_")+toString(i_bin)+string("_")+toString(j_bin);
             string index_name_in=string("index_")+name_in;
+
             //check if C(l) exists for this z-bin combination
             bool has_val = block->has_val(config->input_section_name, name_in);
+
             if (has_val) 
             {
-                //clog<<name_in<<endl;
-                for (int mode_count=0; mode_count<=config->nmode; mode_count++)
-                {
-                    //clog<<"mode_count="<<mode_count<<endl;
-                    vector<number> C_ell;
-                    status = block->get_val<vector<number> >(config->input_section_name, name_in, C_ell);
-                    config->psi->setCl(logell,C_ell);
-                    val = config->psi->value_psi(mode_count,config->type);
-                    psi_vec.push_back(val);
-                }
+                vector<number> C_ell;
+                status = block->get_val< vector<number> >(config->input_section_name, name_in, C_ell);
+                config->psi->setCl(logell,C_ell);
+                vector<number> psi_vec = config->psi->calPsi(config->type);
+
                 block->put_val(config->output_section_name, name_in, psi_vec);
                 block->put_val(config->output_section_name, index_name_in, n_vals);
             }
@@ -315,8 +276,12 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config_in)
     }
     block->put_val(config->output_section_name, "nbin_a", num_z_bin_A); 
     block->put_val(config->output_section_name, "nbin_b", num_z_bin_B);
+    block->put_val(config->output_section_name, "theta_min", config->theta_min);
+    block->put_val(config->output_section_name, "theta_max", config->theta_max);
     block->put_val(config->output_section_name, "type", config->type);
     block->put_val(config->output_section_name, "input_section_name", config->input_section_name);
+
+    disable_gsl_error_handling();
     return status;
 }
 

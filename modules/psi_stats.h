@@ -2,7 +2,6 @@
 #define PSI_STATS_H
 
 #include "psi_filters.h"
-// #include <gsl/gsl_sf_bessel.h>
 #include "Integrate.h"
 
 
@@ -15,30 +14,37 @@ class psi_stats: public function_cosebis
 
 		psi_stats();
 		~psi_stats();
-		///some inputs for the constructor
-		psi_stats(number minTH, number maxTH, int nThetaBins, number LMIN, number LMAX, 
-			int LBINS, int Nstep_Integ, number lthresh_set,
+		///constructor
+		psi_stats(number theta_min_arc, number theta_max_arc, number LMIN, number LMAX, 
+			int LBINS, 
 			string FolderName=COSEBIS_DIR "/psi_Wn/",
 			string WFileName= "W_psi");
+		//initialisation function, calls some of the functions below
+		void initialise(number theta_min_arc, number theta_max_arc, number LMIN, number LMAX, 
+			int LBINS, string WFolderName1,string WFileName1);
 
-		void initialise(number minTH, number maxTH, int nThetaBins, number LMIN, number LMAX, 
-			int LBINS, int Nstep_Integ, number lthresh_set,
-			string WFolderName,string WFileName);
+		void setIntegrationType(string integration_type1);
 
-		///initializes Wn_vec
+		///initialises Wn_vec
 		void setWFilters(int nMaximum);
-		void set_mode(int mode_eval);
-		number integrant(number l);
-		vector<number> determine_integration_limits(number last_x_value);
-		number value_psi(int n, string integration_type1);
-		vector<number> openFile(string FilePath,string FileNames);
 
-		void setCl_GG(vector<number> log_ell, vector<number> Cl_GG);
+		///integrant has options for gg, gm and covariance
+		number integrant(number l);
+		///this needs ot be set just once for each weight function
+		vector<number> determine_integration_limits(number last_x_value);
+		/// value of psi for a given n.
+		number value_psi(int n);
+		/// calculates Psi for gg or gm
+		vector<number> calPsi(string integration_type1);
+		/// reads input Cl and make interpolation table
 		void setCl(vector<number> log_ell,vector<number> Cl);
 
-		void input_for_setCl(vector<number> ell, vector<vector<number> > cl_gg, vector<vector<number> > cl_gm,vector<vector<number> > cl_mm);
-		void setPower(vector<number> log_ell,vector<vector<number> > Cl_GG, vector<vector<number> > Cl_GM,vector<vector<number> > InputPower_matter);
+		///////////////////////////////////////////////////////////////////
+		// Covariance section
+		//read in power spectra for galaxy clustering: cl_gg, galaxy-galaxy lensing: cl_gm, cosmic shear: cl_mm
+		void input_for_setCl(vector<number> log_ell, vector<vector<number> > cl_gg, vector<vector<number> > cl_gm,vector<vector<number> > cl_mm);
 		
+		/// set noise for covariance
 		void setNoise(vector<number> sigma_e_vec1,vector<number> nBar_shear_vec,vector<number> nBar_gals_vec);
 		
 		vector<vector<matrix* > > determine_integration_limitsCov();
@@ -52,7 +58,7 @@ class psi_stats: public function_cosebis
 
 	private:
 
-		number thetaMin,thetaMax,thetaBar,deltaTheta,lmin,lmax,theta_eval,lthresh;
+		number thetamin,thetamax,thetaBar,deltaTheta,lmin,lmax,theta_eval,lthresh;
 		int lbins,thetaBins,nMaximum,nW,mW,integ_step,rp;
 		bool find_min_max,WnSet;
 		int rp1,rp2,rp3,rp4;
@@ -64,15 +70,16 @@ class psi_stats: public function_cosebis
 
 		//Create a vector of class objects
 		vector<psi_filters> Wn_vec;
-		function_cosebis Cl_input;
+		function_cosebis Cl;
+
+		//these are for covaraince
 		vector<function_cosebis> Cl_GG_vec;
 		vector<function_cosebis> Cl_GM_vec;
 		vector<function_cosebis> Cl_MM_vec;
-		vector<number> integ_limits;
+
 		vector<number> noise_mm_vec,noise_gg_vec;
 		vector<vector<number> > integ_limits_vec_vec;
 		string WFileName,WFolderName;
-		function_cosebis Cl_func;
 
 };
 

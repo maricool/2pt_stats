@@ -11,32 +11,32 @@ psi_filters::~psi_filters(){}
 //------------------------------Setup-------------------------------------//
 //------------------------------------------------------------------------//
 
-psi_filters::psi_filters(number minTH, number maxTH, int Bins, int nMaximum,
+
+psi_filters::psi_filters(number thetamin, number thetamax, int nMaximum,
 	number LMIN, number LMAX, int LBINS,string FolderName,string WFileName)
 {
-	initialise(minTH, maxTH, Bins, nMaximum,LMIN, LMAX, LBINS,FolderName,WFileName);
+	initialise(thetamin, thetamax, nMaximum,LMIN, LMAX, LBINS,FolderName,WFileName);
 }
 
-void psi_filters::initialise(number minTH, number maxTH, int Bins, int nMaximum,
+void psi_filters::initialise(number thetamin, number thetamax, int nMaximum,
 	number LMIN, number LMAX, int LBINS,string FolderName,string WFileName)
 {
 	clog << "Initializing psi_filters" << endl;
-	setValues(minTH, maxTH, Bins, LMIN, LMAX, LBINS);
+	setValues(thetamin, thetamax, LMIN, LMAX, LBINS);
 	initialize_mode(nMaximum);
 	setNames(FolderName,WFileName);
 }
 
 
-void psi_filters::setValues(number minTH, number maxTH, int Bins, number LMIN, 
+void psi_filters::setValues(number thetamin1, number thetamax1, number LMIN, 
 	number LMAX, int LBINS)
 { 
 
 	//NB. All the angles within the C-codes are in radians
-	thetaMin   = minTH;
-	thetaMax   = maxTH;
-	thetaBar   = (thetaMax + thetaMin) / 2.;
-	deltaTheta = thetaMax - thetaMin;
-	thetaBins  = Bins;
+	thetamin   = thetamin1;
+	thetamax   = thetamax1;
+	thetaBar   = (thetamax + thetamin) / 2.;
+	deltaTheta = thetamax - thetamin;
 
 	//Set paramters for the l-range which the power-spectra is integrated over (i.e an approximation from l=0 --> l=infinity in reality, but because of filter functions this is not necessary)
 	lmin = LMIN;
@@ -65,23 +65,9 @@ number psi_filters::get( number l )
 {
 	//I have left this corrType part in as it gives the user an option to go via the Q 
 	//(ie._gm integration path although not required)
-	integration_type="W_gg";
-	return valueFuncW(l,thetaMax);
+	integration_type="Wgg";
+	return valueFuncW(l,thetamax);
 }
-
-// void psi_filters::loadWZeros(string filename)
-// {
-// 	matrix zeros;
-// 	zeros.readFromASCII_marika(filename.c_str());
-// 	int rows= zeros.rows;
-// 	clog<<"loaded "<<rows <<" zeros"<<endl;
-// 	//vector<number> BesselJ0_Zeros(cols);
-// 	BesselJ0_Zeros.clear();
-// 	for(int i=0; i<rows; i++)
-// 	{
-// 		BesselJ0_Zeros.push_back(zeros.get(i));
-// 	}
-// }
 
 //This sets up the root vector
 void psi_filters::roots_zeros()
@@ -94,64 +80,22 @@ void psi_filters::roots_zeros()
 	clog<<"sizeBesselJ0_zeros="<<sizeBesselJ0_zeros<<endl;
 	//Loop through all the J0 Bessel function roots
 	int max=sizeBesselJ0_zeros-1;
-	clog<<"theta_max*lmax="<<thetaMax*lmax<<" BesselJ0_Zeros["<<max<<"]="<<BesselJ0_Zeros[max]<<endl;
-	while ((root < thetaMax*lmax)&&(root_loop<sizeBesselJ0_zeros))
+	clog<<"theta_max*lmax="<<thetamax*lmax<<" BesselJ0_Zeros["<<max<<"]="<<BesselJ0_Zeros[max]<<endl;
+	while ((root < thetamax*lmax)&&(root_loop<sizeBesselJ0_zeros))
 	{
 		root = BesselJ0_Zeros[root_loop];
 		//Check if root inside range of interest
 		//First root will probably always be 2.404825557695773 as always very small value
-		if (root >= thetaMin*lmin)
+		if (root >= thetamin*lmin)
 		{
-			//clog << "no. = " << root_loop << ", root = " << root << ", max_val = " << thetaMax*lmax << endl; 
+			//clog << "no. = " << root_loop << ", root = " << root << ", max_val = " << thetamax*lmax << endl; 
 			all_roots.push_back(root);
 		}
 		root_loop++;
 	}
 
 	clog <<"Number of roots found = " << all_roots.size() << endl;
-	//clog <<"BesselJ0_Zeros[99999]="<<BesselJ0_Zeros[99999]<<endl;
 }
-
-
-/*
-void psi_filters::StepFinder()
-{
-	//StepN is a vector of consequitive zeros of integrant for each n
-
-	clog<<"StepFinder begins"<<endl;
-	int i0=0;
-	int iR=0;
-	number arg=0.;
-	StepN.clear();
-	while((arg<thetaMax*lmax)&&(i0<100000)&&(iR<100000))
-	{
-		if(iR>n)
-		{
-			arg=BesselJ0_Zeros[i0];
-			i0++;
-		}
-		else
-		{
-			if(BesselJ0_Zeros[i0]<rootTheta[n-1][iR])
-			{
-				arg=BesselJ0_Zeros[i0];
-				i0++;
-			}
-			else
-			{
-				arg=rootTheta[n-1][iR];
-				iR++;
-				clog<<"iR="<<iR<<endl;
-			}
-		}
-
-		StepN.push_back(arg);
-
-	}
-	clog<<"StepFinder ended"<<endl;
-	clog<<"i0="<<i0<<"iR="<<iR<<endl;
-
-}*/
 
 
 number psi_filters::valueFuncW(number l, number x)
@@ -159,8 +103,8 @@ number psi_filters::valueFuncW(number l, number x)
 	lmode = l;
 	//clog << "l = " << lmode << endl;
 	int accuracyG = 40;
-	number xmin = (lmode*thetaMin);
-	number xmax = (lmode*thetaMax);
+	number xmin = (lmode*thetamin);
+	number xmax = (lmode*thetamax);
 	number resultG=0.;
 	int i=0;
 
@@ -205,7 +149,7 @@ number psi_filters::integrant(number x)
 		return ( x * U(mode,x) );
 	else
 	{
-		clog<<"In psi_filters, not a recognised intergration type:"<<integration_type<<"exiting now ..."<<endl;
+		clog<<"In psi_filters, not a recognised intergration type:"<<integration_type<<", exiting now ..."<<endl;
 		exit(1);
 	}
 }
@@ -217,7 +161,7 @@ number psi_filters::integrant(number x)
 number psi_filters::U(int n, number theta)
 {
 	//This if statement does the same job as the heaviside function.
-	if ((theta > thetaMax)||(theta < thetaMin))
+	if ((theta > thetamax)||(theta < thetamin))
 		return 0.;
 	if (n==1)
 		return 12. * deltaTheta * (theta - deltaTheta) / ( pow(deltaTheta, 3) * sqrt( pow(deltaTheta,2) + 24. * pow (thetaBar,2)));
@@ -250,16 +194,16 @@ number psi_filters::analyticalQ(number theta, int n)
 	int M = floor(n/2);
 
 	number thetaTerm = theta - thetaBar ;
-	number thetaTermmin = thetaMin - thetaBar;
+	number thetaTermmin = thetamin - thetaBar;
 
 	if (n == 1)
 	{
 
 		number A_theta = pow(theta,2)*( (4.* theta * pow(thetaBar,2) - 6. * deltaTheta)/deltaTheta - 0.5) ;
-		number A_thetaMin = pow(thetaMin,2)*( (4.* thetaMin * pow(thetaBar,2) - 6. * deltaTheta)/deltaTheta - 0.5) ;
+		number A_thetamin = pow(thetamin,2)*( (4.* thetamin * pow(thetaBar,2) - 6. * deltaTheta)/deltaTheta - 0.5) ;
 
 		number prefactor = 2./(pow(theta,2) * deltaTheta * sqrt(2*deltaTheta+ 24.* pow(theta,2)));
-		number Q1 = prefactor * (A_theta - A_thetaMin) - U(n,theta);
+		number Q1 = prefactor * (A_theta - A_thetamin) - U(n,theta);
 		return Q1;
 	}
 	else
@@ -275,7 +219,7 @@ number psi_filters::analyticalQ(number theta, int n)
 			number nm = (n - 2*m + 1);
 			integration_term = (1./nm) * ( theta * pow(thetaTerm,nm) - (pow(thetaTerm,(nm+1))/(nm+1)));
 
-			integration_term_low = (1./nm) * ( thetaMin * pow(thetaTermmin,nm) - (pow(thetaTermmin,(nm+1))/(nm+1)));
+			integration_term_low = (1./nm) * ( thetamin * pow(thetaTermmin,nm) - (pow(thetaTermmin,(nm+1))/(nm+1)));
 
 			sum += (integration_term - integration_term_low) * factor ;
 		}
@@ -311,13 +255,13 @@ void psi_filters::set(int n, string WnFileName)
 	mode = n;
 
 	clog << "\n \n In  psi_filters::set, setting up the W filters" << endl;
-	clog << "Theta min (arcmin): " << radians_to_arcmin(thetaMin) << ", Theta max (arcmin): " <<  radians_to_arcmin(thetaMax) << endl;
+	clog << "Theta min (arcmin): " << radians_to_arcmin(thetamin) << ", Theta max (arcmin): " <<  radians_to_arcmin(thetamax) << endl;
 	clog << "lmin=" << lmin << ", lmax=" << lmax <<  ", lbins=" << lbins << endl;
 
 	// is there a table on disk?
 	string myname =FolderName+string("/")+string(WFileName)+toString(mode)+string("-")
-		 +toString(radians_to_arcmin(thetaMin),2)+string("-")
-		 +toString(radians_to_arcmin(thetaMax),2)+string("-lmin-")
+		 +toString(radians_to_arcmin(thetamin),2)+string("-")
+		 +toString(radians_to_arcmin(thetamax),2)+string("-lmin-")
 		 +toString(lmin,1)+string("-lmax-")
 		 +toString(lmax,1)+string("-lbins-")+toString(lbins);
 	//this sets the name of the table to be saved or loaded from disk, it is a function in function_cosebis

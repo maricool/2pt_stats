@@ -3,18 +3,10 @@
 #include "function_cosebis.h"
 //BesselJ0_Zeros and UFilter_roots are saved here
 #include "psi_filters_integrand_zeros.h"
-#include <iostream>
-#include <cmath>
-#include <fstream>
-#include <iterator>
-#include <string>
 #include <gsl/gsl_sf_legendre.h>
 #include <gsl/gsl_sf_bessel.h>
 #include "matrix.h"
 #include "Integrate.h"
-
-//Only goes to lmax=5e5 above that everything goes to zero.
-// We can switch to determin integration limit to go higher
 
 class psi_filters : public function_cosebis
 {
@@ -24,29 +16,29 @@ class psi_filters : public function_cosebis
 		~psi_filters();
 
 		// Initialize the global parameters for the functions
-		psi_filters(double minTH, double maxTH, int Bins, int nMaximum1, double LMIN, 
-			double LMAX, int LBINS,
-			string FolderName="../psi/WFilters/",
-			string WFileName="W_psi");
+		psi_filters(number thetamin, number thetamax, int nMaximum,
+			number LMIN, number LMAX, int LBINS,
+			string FolderName=COSEBIS_DIR "/psi_Wn/",
+			string WFileName= "W_psi");
 
-		void initialise(double minTH, double maxTH, int Bins, int nMaximum1,double LMIN, 
-			double LMAX, int LBINS,string FolderName,string WFileName);
+		void initialise(number thetamin, number thetamax, int nMaximum,
+			number LMIN, number LMAX, int LBINS,string FolderName,string WFileName);
 
 		//^^^^ calls the next two functions to set the parameters
-		void setValues(double minTH, double maxTH, int Bins, double LMIN, double LMAX, int LBINS);
+		void setValues(number thetamin1, number thetamax1, number LMIN, number LMAX, int LBINS);
 		// Sets the maximum mode being analysed.
 		void initialize_mode(int nMaximum);
 		void setNames(string FolderName1,string WFileName1);
 		//This calculates W_gg(l) for a given l
-		double get( double l); 
+		number get( number l); 
 		//void loadWZeros(string filename="../psi/zeros_j0.txt");
-		double valueFuncW(double l, double x);
+		number valueFuncW(number l, number x);
 		//Determines the minima and maxima of a function so then can compute the guassian integration in-between pts.
-		vector<double> determine_integration_limits(double last_x_value);
-		vector<double> find_zeros_of_W_integrand(double last_x_value, vector<double> UFilter_roots_for_mode);
+		vector<number> determine_integration_limits(number last_x_value);
+		vector<number> find_zeros_of_W_integrand(number last_x_value, vector<number> UFilter_roots_for_mode);
 		void roots_zeros();
 		//This function tests the root finder call
-		void test_find_zeros_of_W_integrand(int m, double elle, int ttbins);
+		void test_find_zeros_of_W_integrand(int m, number elle, int ttbins);
 		int sum_of_digits(int max_digit);
 
 		//Define the integrants used within the class
@@ -56,12 +48,12 @@ class psi_filters : public function_cosebis
 		// number integrant_Wgg(number l);
 
 
-		number U(int mode, double theta);
+		number U(int mode, number theta);
 		number U1(number theta);
 		number Un(int mode, number theta);
-		double radians_to_arcmin(double t_in);
+		number radians_to_arcmin(number t_in);
 
-		number analyticalQ(double theta, int n);
+		number analyticalQ(number theta, int n);
 
 		void set(int order, string WnFileName="W_nn_file_");
 
@@ -70,9 +62,9 @@ class psi_filters : public function_cosebis
 
 	private:
 
-		int mode, nMaximum, thetaBins, lbins; 
-		double thetaMin, thetaMax, thetaBar, deltaTheta, lmin, lmax, lmode;
-		vector<double> all_roots;
+		int mode, nMaximum, lbins; 
+		number thetamin, thetamax, thetaBar, deltaTheta, lmin, lmax, lmode;
+		vector<number> all_roots;
 
 		number legendre_coeffs(number sum_idx);
 		number factorial(number num_in);
