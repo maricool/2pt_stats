@@ -31,17 +31,18 @@ void psi_filters::initialise(number thetamin, number thetamax, int nMaximum,
 void psi_filters::setValues(number thetamin1, number thetamax1, number LMIN, 
 	number LMAX, int LBINS)
 { 
-
 	//NB. All the angles within the C-codes are in radians
 	thetamin   = thetamin1;
 	thetamax   = thetamax1;
 	thetaBar   = (thetamax + thetamin) / 2.;
 	deltaTheta = thetamax - thetamin;
+	clog<<"thetamin="<<thetamin<<" thetamax="<<thetamax<<endl;
 
 	//Set paramters for the l-range which the power-spectra is integrated over (i.e an approximation from l=0 --> l=infinity in reality, but because of filter functions this is not necessary)
 	lmin = LMIN;
 	lmax = LMAX;
 	lbins = LBINS;
+	set_integration_type("Wgg");
 	clog<<"lmin="<<lmin<<" lmax="<<lmax<<" lbins="<<lbins<<endl;
 }
 
@@ -61,12 +62,16 @@ void psi_filters::setNames(string FolderName1,string WFileName1)
 //---------------------------Get Filters----------------------------------//
 //------------------------------------------------------------------------//
 
-number psi_filters::get( number l )
+number psi_filters::get(number l)
 {
 	//I have left this corrType part in as it gives the user an option to go via the Q 
 	//(ie._gm integration path although not required)
-	integration_type="Wgg";
 	return valueFuncW(l,thetamax);
+}
+
+void psi_filters::set_integration_type(string integration_type1)
+{
+	integration_type = integration_type1;
 }
 
 //This sets up the root vector
@@ -158,13 +163,14 @@ number psi_filters::integrant(number x)
 //----------------------------Calulate U----------------------------------//
 //------------------------------------------------------------------------//
 
+// Note eq. 15 in https://arxiv.org/pdf/2004.07811.pdf is wrong. The one here is the correct one. 
 number psi_filters::U(int n, number theta)
 {
 	//This if statement does the same job as the heaviside function.
 	if ((theta > thetamax)||(theta < thetamin))
 		return 0.;
 	if (n==1)
-		return 12. * deltaTheta * (theta - deltaTheta) / ( pow(deltaTheta, 3) * sqrt( pow(deltaTheta,2) + 24. * pow (thetaBar,2)));
+		return ( 12. * thetaBar * (theta - thetaBar) - pow(deltaTheta, 2) )  / ( pow(deltaTheta, 3) * sqrt( 2. * pow(deltaTheta,2) + 24. * pow (thetaBar,2)));
 	else
 	{
 
@@ -188,42 +194,38 @@ number psi_filters::U(int n, number theta)
 
 number psi_filters::analyticalQ(number theta, int n)
 {
-	mode = n;
-	number sum=0; 
-	number numerator, denominator, factor, integration_term, integration_term_low,Q1;
+	mode = n; 
 	int M = floor(n/2);
-
-	number thetaTerm = theta - thetaBar ;
-	number thetaTermmin = thetamin - thetaBar;
 
 	if (n == 1)
 	{
 
-		number A_theta = pow(theta,2)*( (4.* theta * pow(thetaBar,2) - 6. * deltaTheta)/deltaTheta - 0.5) ;
-		number A_thetamin = pow(thetamin,2)*( (4.* thetamin * pow(thetaBar,2) - 6. * deltaTheta)/deltaTheta - 0.5) ;
+		number A_theta = pow(theta,2)*      ( (4.* theta * thetaBar    - 6. * pow(thetaBar,2))/deltaTheta - 0.5) ;
+		number A_thetamin = pow(thetamin,2)*( (4.* thetamin * thetaBar - 6. * pow(thetaBar,2))/deltaTheta - 0.5) ;
 
-		number prefactor = 2./(pow(theta,2) * deltaTheta * sqrt(2*deltaTheta+ 24.* pow(theta,2)));
+		number prefactor = 2./(pow(theta,2) * deltaTheta * sqrt(2* pow(deltaTheta,2) + 24.* pow(theta,2)));
 		number Q1 = prefactor * (A_theta - A_thetamin) - U(n,theta);
 		return Q1;
 	}
 	else
 	{
+		number sum=0;
 		for (int m=0; m<=M; m++)
 		{
-			numerator = pow(-1,m) * factorial(2*n-2*m) * pow((2./deltaTheta),(n-2*m));
+			number numerator   = pow(-1,m) * factorial(2*n-2*m) * pow((2./deltaTheta),(n-2*m));
 
-			denominator = pow(2,n) * factorial(m) * factorial(n-m) * factorial(n-2*m);
+			number denominator = pow(2,n) * factorial(m) * factorial(n-m) * factorial(n-2*m);
 
-			factor =  numerator / denominator;
+			number factor =  numerator / denominator;
 
-			number nm = (n - 2*m + 1);
-			integration_term = (1./nm) * ( theta * pow(thetaTerm,nm) - (pow(thetaTerm,(nm+1))/(nm+1)));
+			number nm = (n - 2.*m + 1.);
+			number integration_term_theta     = pow((theta - thetaBar),nm)/nm    * ( theta  -    (theta - thetaBar)/(nm+1));
 
-			integration_term_low = (1./nm) * ( thetamin * pow(thetaTermmin,nm) - (pow(thetaTermmin,(nm+1))/(nm+1)));
+			number integration_term_theta_min = pow((thetamin - thetaBar),nm)/nm * ( thetamin  - (thetamin - thetaBar)/(nm+1));
 
-			sum += (integration_term - integration_term_low) * factor ;
+			sum += factor * (integration_term_theta - integration_term_theta_min);
 		}
-		return  sqrt((2*n + 1)/2.)/pow((theta * deltaTheta), 2) * sum - U(n,theta);
+		return  sqrt(2.* (2*n + 1))/pow((theta * deltaTheta), 2) * sum - U(n,theta);
 	}
 }
 

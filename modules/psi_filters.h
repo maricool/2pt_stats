@@ -29,6 +29,7 @@ class psi_filters : public function_cosebis
 		// Sets the maximum mode being analysed.
 		void initialize_mode(int nMaximum);
 		void setNames(string FolderName1,string WFileName1);
+		void set_integration_type(string integration_type1);
 		//This calculates W_gg(l) for a given l
 		number get( number l); 
 		//void loadWZeros(string filename="../psi/zeros_j0.txt");
