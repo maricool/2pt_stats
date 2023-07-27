@@ -36,6 +36,8 @@ class psi_filters : public function_cosebis
 		number get( number l); 
 		//void loadWZeros(string filename="../psi/zeros_j0.txt");
 		number valueFuncW(number l, number x);
+		void saveQAnalytic(int n);
+		void saveQ(int n);
 		//Determines the minima and maxima of a function so then can compute the guassian integration in-between pts.
 		vector<number> determine_integration_limits(number last_x_value);
 		vector<number> find_zeros_of_W_integrand(number last_x_value, vector<number> UFilter_roots_for_mode);

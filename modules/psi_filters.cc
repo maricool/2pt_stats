@@ -66,6 +66,10 @@ number psi_filters::get(number l)
 {
 	//I have left this corrType part in as it gives the user an option to go via the Q 
 	//(ie._gm integration path although not required)
+
+	saveQ(mode);
+	saveQAnalytic(mode);
+
 	return valueFuncW(l,thetamax);
 }
 
@@ -106,6 +110,7 @@ void psi_filters::roots_zeros()
 number psi_filters::valueFuncW(number l, number x)
 {	
 	lmode = l;
+	set_integration_type("Wgm");
 	//clog << "l = " << lmode << endl;
 	int accuracyG = 40;
 	number xmin = (lmode*thetamin);
@@ -137,6 +142,48 @@ number psi_filters::valueFuncW(number l, number x)
 	}
 	return resultG/lmode/lmode;
 }
+
+void psi_filters::saveQ(int n)
+{
+	int nTheta = 1000;
+	mode = n;
+	integration_type = "Q";
+	matrix Q_mat(2,nTheta);
+
+	for(int itheta=0; itheta<nTheta; itheta++)
+	{
+		number theta = thetamin + (thetamax-thetamin)/(nTheta-1)*(itheta);
+		int accuracyG = 100;
+		number Qn = 2./pow(thetaBar,2) * gaussianIntegrate_gsl(*this, thetamin, theta,accuracyG) - U(n,theta);
+		Q_mat.load(0,itheta,theta);
+		Q_mat.load(1,itheta,Qn);
+	}
+
+	Q_mat.printOut((FolderName+string("/Q")+toString(n)+string(".ascii")).c_str(),10);
+
+	//return Q_mat;
+}
+
+void psi_filters::saveQAnalytic(int n)
+{
+	int nTheta = 1000;
+	mode = n;
+	matrix Q_mat(2,nTheta);
+
+	for(int itheta=0; itheta<nTheta; itheta++)
+	{
+		number theta = thetamin + (thetamax-thetamin)/(nTheta-1)*(itheta);
+		number Qn = analyticalQ(theta, n);
+		Q_mat.load(0,itheta,theta);
+		Q_mat.load(1,itheta,Qn);
+	}
+
+	Q_mat.printOut((FolderName+string("/Q_analytic_")+toString(n)+string(".ascii")).c_str(),10);
+
+	//return Q_mat;
+}
+
+
 
 
 //------------------------------------------------------------------------//
@@ -200,11 +247,10 @@ number psi_filters::analyticalQ(number theta, int n)
 	if (n == 1)
 	{
 
-		number A_theta = pow(theta,2)*      ( (4.* theta * thetaBar    - 6. * pow(thetaBar,2))/deltaTheta - 0.5) ;
-		number A_thetamin = pow(thetamin,2)*( (4.* thetamin * thetaBar - 6. * pow(thetaBar,2))/deltaTheta - 0.5) ;
-
-		number prefactor = 2./(pow(theta,2) * deltaTheta * sqrt(2* pow(deltaTheta,2) + 24.* pow(theta,2)));
-		number Q1 = prefactor * (A_theta - A_thetamin) - U(n,theta);
+		number prefactor =   pow(theta,2) * pow(deltaTheta,3) *sqrt(2* pow(deltaTheta,2) + 24.* pow(thetaBar,2));
+        number thetamin_integral =  pow(thetamin,2) * ( 4.* thetamin * thetaBar - 6. * pow(thetaBar,2)- pow(deltaTheta,2)/2.);
+        number theta_integral    =  pow(theta,2)    * ( 4.* theta * thetaBar    - 6. * pow(thetaBar,2)- pow(deltaTheta,2)/2.);
+        number Q1 = 2./prefactor * (theta_integral - thetamin_integral) - U(n,theta);
 		return Q1;
 	}
 	else
@@ -216,16 +262,19 @@ number psi_filters::analyticalQ(number theta, int n)
 
 			number denominator = pow(2,n) * factorial(m) * factorial(n-m) * factorial(n-2*m);
 
+			// Lets try this and see if it is stable:
+
 			number factor =  numerator / denominator;
 
 			number nm = (n - 2.*m + 1.);
-			number integration_term_theta     = pow((theta - thetaBar),nm)/nm    * ( theta  -    (theta - thetaBar)/(nm+1));
 
-			number integration_term_theta_min = pow((thetamin - thetaBar),nm)/nm * ( thetamin  - (thetamin - thetaBar)/(nm+1));
+			number integration_term_theta     = pow((theta    - thetaBar),nm) * ( (theta    - thetaBar)/(nm+1) + thetaBar/nm);
+
+			number integration_term_theta_min = pow((thetamin - thetaBar),nm) * ( (thetamin - thetaBar)/(nm+1) + thetaBar/nm);
 
 			sum += factor * (integration_term_theta - integration_term_theta_min);
 		}
-		return  sqrt(2.* (2*n + 1))/pow((theta * deltaTheta), 2) * sum - U(n,theta);
+		return  2.* sqrt((2.*n + 1.)/2.)/pow((theta * deltaTheta), 2) * sum - U(n,theta);
 	}
 }
 
