@@ -22,6 +22,9 @@ typedef struct psi_config
     number Area_GG;
     number Area_GM;
     number Area_cross;
+    vector<number> ngal_shear;
+    vector<number> ngal_position;
+    vector<number> sigma_e;
     string cov_file_name;
     //string type;
     bool Cross_cov;
@@ -62,17 +65,6 @@ void * setup(cosmosis::DataBlock * options, cosmosis::DataBlock * block)
     string WFolderName,WFileName;
     number ellmin,ellmax;
     int ellbins;
-
-
-    // status = options->get_val<string>(OPTION_SECTION, string("type"),"all", config->type);
-    // if (status) 
-    // {
-    //     clog<<"Could not load type to psi,";
-    //     clog<<"setting to default: "<<config->type<<endl;
-    // }
-    // else
-    //     clog<<"type = "<<config->type<<endl;
-
 
     status = options->get_val<string>(OPTION_SECTION, string("input_section_name_gg"), config->input_section_name_gg);
     if (status) 
@@ -207,9 +199,7 @@ void * setup(cosmosis::DataBlock * options, cosmosis::DataBlock * block)
         }
     }
 
-    vector<number> sigma_e,ngal_shear,ngal_position;
-
-    status=options->get_val< vector<number> >(OPTION_SECTION, string("sigma_e"),sigma_e);
+    status=options->get_val< vector<number> >(OPTION_SECTION, string("sigma_e"),config->sigma_e);
     if(status)
     {
         clog<<"Didn't find sigma_e values for covariance"<<endl;
@@ -217,15 +207,15 @@ void * setup(cosmosis::DataBlock * options, cosmosis::DataBlock * block)
     }
     else
     {
-        clog<<"Found "<<sigma_e.size()<<" sigma_e values"<<endl;
-        for(int i=0; i<sigma_e.size(); i++)
+        clog<<"Found "<<config->sigma_e.size()<<" sigma_e values"<<endl;
+        for(int i=0; i<config->sigma_e.size(); i++)
         {
-            clog<<i<<":"<<sigma_e[i]<<endl;
-            sigma_e[i]*=sqrt(2.);
+            clog<<i<<":"<<config->sigma_e[i]<<endl;
+            config->sigma_e[i]*=sqrt(2.);
         }
     }
 
-    status=options->get_val<std::vector<number> >(OPTION_SECTION, string("ngal_shear"),ngal_shear);
+    status=options->get_val<std::vector<number> >(OPTION_SECTION, string("ngal_shear"),config->ngal_shear);
     if(status)
     {
         clog<<"Didn't find ngal_shear values for covariance"<<endl;
@@ -233,15 +223,15 @@ void * setup(cosmosis::DataBlock * options, cosmosis::DataBlock * block)
     }
     else
     {
-        clog<<"Found "<<ngal_shear.size()<<" ngal_shear values"<<endl;
-        for(int i=0; i<ngal_shear.size(); i++)
+        clog<<"Found "<<config->ngal_shear.size()<<" ngal_shear values"<<endl;
+        for(int i=0; i<config->ngal_shear.size(); i++)
         {
-            clog<<i<<":"<<ngal_shear[i]<<endl;
-            ngal_shear[i]*=1./arcmin/arcmin;
+            clog<<i<<":"<<config->ngal_shear[i]<<endl;
+            config->ngal_shear[i]*=1./arcmin/arcmin;
         }
     }
 
-    status=options->get_val<std::vector<number> >(OPTION_SECTION, string("ngal_position"),ngal_position);
+    status=options->get_val<std::vector<number> >(OPTION_SECTION, string("ngal_position"),config->ngal_position);
     if(status)
     {
         clog<<"Didn't find ngal_position values for covariance"<<endl;
@@ -249,11 +239,11 @@ void * setup(cosmosis::DataBlock * options, cosmosis::DataBlock * block)
     }
     else
     {
-        clog<<"Found "<<ngal_position.size()<<" ngal_position values"<<endl;
-        for(int i=0; i<ngal_position.size(); i++)
+        clog<<"Found "<<config->ngal_position.size()<<" ngal_position values"<<endl;
+        for(int i=0; i<config->ngal_position.size(); i++)
         {
-            clog<<i<<":"<<ngal_position[i]<<endl;
-            ngal_position[i]*=1./arcmin/arcmin;
+            clog<<i<<":"<<config->ngal_position[i]<<endl;
+            config->ngal_position[i]*=1./arcmin/arcmin;
         }
     }
 
@@ -311,7 +301,7 @@ void * setup(cosmosis::DataBlock * options, cosmosis::DataBlock * block)
     psi_stats *psi = new psi_stats(config->theta_min, config->theta_max, ellmin, ellmax, ellbins,WFolderName,WFileName);
     
     psi->setWFilters(config->nMaximum);
-    psi->setNoise(sigma_e,ngal_shear,ngal_position);
+    psi->setNoise(config->sigma_e,config->ngal_shear,config->ngal_position);
 
     config->psi=psi;
 
@@ -492,7 +482,6 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config_in)
     matrix Cov_mat=config->psi->calCov(config->Area_GG,config->Area_GM, config->Area_cross, config->Cross_cov);
     Cov_mat.printOut((config->cov_file_name).c_str(),20);
 
-
     status = block->put_val(config->output_section_name, "cov_file_name", config->cov_file_name);
     status = block->put_val(config->output_section_name, "nbin_a_gg", num_z_bin_A_gg); 
     status = block->put_val(config->output_section_name, "nbin_b_gg", num_z_bin_B_gg);
@@ -515,6 +504,10 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config_in)
     status = block->put_val(config->output_section_name, "theta_min", config->theta_min);
     status = block->put_val(config->output_section_name, "theta_max", config->theta_max);
     status = block->put_val(config->output_section_name, "nMaximum", config->nMaximum);
+
+    status = block->put_val(config->output_section_name, "sigma_e", config->sigma_e);
+    status = block->put_val(config->output_section_name, "ngal_shear", config->ngal_shear);
+    status = block->put_val(config->output_section_name, "ngal_position", config->ngal_position);
 
     return status;
 }

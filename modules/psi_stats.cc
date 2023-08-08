@@ -277,11 +277,13 @@ void psi_stats::setNoise(vector<number> sigma_e_vec,vector<number> nBar_shear_ve
 	for(int bin=0; bin<nBar_gals_vec.size(); bin++)
 	{
 		noise_gg_vec.push_back(1./nBar_gals_vec[bin]);
+		//clog<<"bin"<<bin<<" noise gg is "<<noise_gg_vec[bin]<<endl;
 	}
 
 	for(int bin=0; bin<sigma_e_vec.size(); bin++)
 	{
 		noise_mm_vec.push_back(sigma_e_vec[bin]*sigma_e_vec[bin]/(2.*nBar_shear_vec[bin]));
+		//clog<<"bin"<<bin<<" noise mm is "<<noise_mm_vec[bin]<<endl;
 	}
 }
 
@@ -304,13 +306,13 @@ vector<vector<matrix* > > psi_stats::determine_integration_limitsCov()
 	vector <matrix*> integ_mat_vec;
 	for(int n=0; n<nMaximum; n++)
 	{
-
 		integ_mat_vec.clear();
 		for(int m=0; m<nMaximum; m++)
 		{
 			vector <number> integ_lim_vec;
 			for(int i=0;i<Nbins;i++)
 				table.load(1,i,Wn_vec[n].value(table.get(0,i))*Wn_vec[m].value(table.get(0,i)));
+
 			integ_lim_vec.push_back(LLOW);
 			integ_lim_vec.push_back(lthresh);
 			for(int i=1;i<Nbins-1;i++)//2->1
@@ -328,6 +330,7 @@ vector<vector<matrix* > > psi_stats::determine_integration_limitsCov()
 	}
 	return integ_limits_cov;
 }
+
 
 number psi_stats::valueCov(int n1,int m1, vector<vector<matrix* > > integ_limits_cov)
 {
@@ -385,7 +388,6 @@ matrix psi_stats::calCov(number Area_GG,number Area_GM,number Area_cross,bool Cr
 							CMT.load(j+(n-1)-(m-1),i+(m-1)-(n-1),CMT.get(i,j));
 						}
 					}
-					CMT.printOut((string("C_GG.ascii")).c_str(),10);
 				}
 			}
 		}
