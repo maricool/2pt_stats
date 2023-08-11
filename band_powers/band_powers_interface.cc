@@ -1,8 +1,8 @@
 ///for cpp use the .hh and for c the .h version
 //This deals with the inputs and outputs
-#include "cosmosis/datablock/datablock.hh"
+#include "datablock/datablock.hh"
 //This is just a header file which defines the different section names
-#include "cosmosis/datablock/section_names.h"
+#include "datablock/section_names.h"
 #include <typeinfo>
 
 /*CosmoSIS interface file for going from shear C(l) to E/B - BandPower
