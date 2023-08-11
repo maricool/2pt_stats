@@ -1,8 +1,8 @@
 ///for cpp use the .hh and for c the .h version
 //This deals with the inputs and outputs
-#include "datablock/datablock.hh"
+#include "cosmosis/datablock/datablock.hh"
 //This is just a header file which defines the different section names
-#include "datablock/section_names.h"
+#include "cosmosis/datablock/section_names.h"
 #include <typeinfo>
 
 /*CosmoSIS interface file for going from xi_pm to binned xi_pm with added effects.
@@ -174,7 +174,7 @@ extern "C" {
 		string theta_file_name;
 
 		// if status is zero the variable we were looking for is in the ini file 
-		// otherwise status return a nonzero value
+		// otherwise status returns a nonzero value
 		bool theta_edges_calculated_from_theta_min_max=false;
 		status=options->get_val<string>(sectionName, string("theta_file_name"), theta_file_name);
 		if(status)
@@ -385,7 +385,7 @@ extern "C" {
 			clog<<"going to do weighted binning"<<endl;
 			clog<<"If theta_min_max_filename is not given will use theta_min, theta_max, nTheta to produce the bin edges"<<endl;
 			clog<<"If those are not given then will not do weighted binning"<<endl;
-			//this should be a file with two columns with column 1 showing theta_min 
+			// this should be a file with two columns with column 1 showing theta_min 
 			// and column 2 showing theta_max for each theta bin
 			// number of theta bins is kept constant for all redshift bin combinations
 			status= options->get_val<string>(sectionName, string("theta_min_max_filename"), theta_min_max_filename);
@@ -538,7 +538,7 @@ extern "C" {
 				}
 				else
 				{
-					clog<<"one or more Npair files don't exist, goin to use Npair proportional to theta instead"<<endl;
+					clog<<"one or more Npair files don't exist, going to use Npair proportional to theta instead"<<endl;
 					config->weight_theta_bins_from_input=false;
 					config->weight_theta_bins_by_theta=true;
 				}
@@ -694,10 +694,10 @@ extern "C" {
 
 					if(config->weight_theta_bins_from_input || config->weight_theta_bins_by_theta)
 					{
-						//clog<<"going to do weighted binning"<<endl;
 						for(int itheta=0; itheta<config->nTheta; itheta++)
 						{
 							number weightedTheory=0.;
+							// weight by theta
 							if (config->weight_theta_bins_by_theta)
 							{
 								matrix bin_mat(100),weight_mat(100);
@@ -711,9 +711,9 @@ extern "C" {
 									weight_mat.load(it,theta*deltaTheta);
 								}
 								matrix mult=(bin_mat.t()*weight_mat);
-								//clog<<"mult size is"<<mult.size();
 								weightedTheory=mult.get(0,0)/weight_mat.sum();
 							}
+							// weight by input galaxy npairs
 							else
 							{
 								int itmin=int(config->index_min[pair].get(itheta));
@@ -726,20 +726,20 @@ extern "C" {
 									weight_mat.load(it-itmin,config->Npair_mat_vec[pair].get(it));
 								}
 								matrix mult=(bin_mat.t()*weight_mat);
-								//clog<<"mult size is"<<mult.size();
 								weightedTheory=mult.get(0,0)/weight_mat.sum();
 							}
 							xi_binned.load(0,itheta,weightedTheory);
 						}
 					}// end of weighted binning
+
 					//no weighted binning just use the single theta values for the theory vector
 					else
 					{
-						//clog<<"interpolating for each bin centre"<<endl;
 						for(int itheta=0; itheta<config->nTheta; itheta++)
 							xi_binned.load(0,itheta, pcfs_table.value(config->theta_mat.get(itheta)));
 					}
 					// we have calculated xi_binned
+					////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 					// now add c-term contributions
 					if(config->add_c_term)
@@ -832,7 +832,6 @@ extern "C" {
 					} //end of add 2D cterm
 
 					//could add the cuts here if need be
-					//clog<<"now to convert the matrices to vectors"<<endl;
 					vector<number> xi_vec(xi_binned.rows),theta_vec(config->theta_mat.rows);
 					for(int m=0 ;m<xi_binned.rows ;m++)
 					{

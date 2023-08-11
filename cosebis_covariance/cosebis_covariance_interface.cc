@@ -1,8 +1,8 @@
 ///for cpp use the .hh and for c the .h version
 //This deals with the inputs and outputs
-#include "datablock/datablock.hh"
+#include "cosmosis/datablock/datablock.hh"
 //This is just a header file which defines the different section names
-#include "datablock/section_names.h"
+#include "cosmosis/datablock/section_names.h"
 #include <typeinfo>
 
 /*CosmoSIS interface file for going from shear C(l) to E/B - COSEBIs
@@ -24,8 +24,6 @@ extern "C"
 		int n_max;
 		number theta_min;
 		number theta_max;
-		int IsItBmodes;
-		bool calCov;
 		bool calNoiseCov;
 		string Cov_En_name;
 		int nBins; //this is only needed if the noise only covariance is to be estimated from input nPair
@@ -34,7 +32,6 @@ extern "C"
 		matrix sigma_m_cov;
 		bool sigma_m_cov_read;
 		bool cal_nonGaussian_cov;//if true calculates the non-Gaussian covariance
-		bool OnlyB; //if true only B-mode covariance is calculated
 		matrix InputCl_Cov_mat; //needs and input Cl matrix with ordering: bin_1_1: ell1,ell2,... bin_2_1: ell1, ell2,...
 		vector<number> Input_ell_vec; // The input ell_vec that corresponds to the given input Cl matrix
 	} COSEBIs_config;
@@ -124,24 +121,11 @@ extern "C"
 		else
 			clog<<"Got the value of n_max="<<config->n_max<<endl;
 
-
-		status=options->get_val<int>(sectionName, string("is_it_bmodes"),0, config->IsItBmodes);
-		if(config->IsItBmodes)
-		{
-			clog<<"We are going to calculate B-modes"<<endl;
-			clog<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"<<endl;
-			clog<<"!!!!!!NOTE: make sure that the input Cl is for B-modes !!!!!!!"<<endl;
-			clog<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"<<endl;
-		}
-		else
-			clog<<"Caluclating E-modes"<<endl;
-
 		//get Wn, Tn and output Tn folder names
-				//get Wn, Tn and output Tn folder names
 		string WnFolderName,TnFolderName,OutputTnFolderName;
 		WnFolderName= COSEBIS_DIR "WnLog/";
 		TnFolderName= COSEBIS_DIR "TLogsRootsAndNorms/";
-		OutputTnFolderName="TpnLog/";
+		OutputTnFolderName=COSEBIS_DIR "TpnLog/";
 
 
 		status=options->get_val<string>(sectionName, string("Wn_Output_FolderName"), WnFolderName);
@@ -183,163 +167,123 @@ extern "C"
 		status=options->get_val<string>(sectionName, string("cov_name"), config->Cov_En_name);
 		clog<<"cov name start is set to: "<<config->Cov_En_name<<endl;
 
-		int calculateCov;
-		config->cal_nonGaussian_cov=false;//if true calculates the non-Gaussian covariance
-		status=options->get_val<int>(sectionName, string("calculateCov"), calculateCov);
+		//
+		string sigma_e_file;
+		vector<number> sigma_e;
+		// first read sigma_e if not given exit
+		status=options->get_val<string>(sectionName, string("sigma_e_file"),sigma_e_file);
 		if(status)
 		{
-			clog<<"calculate cov not set: "<<calculateCov<<endl;
-			config->calCov=false;
+			clog<<"Didn't find sigma_e_file for covariance, going to look for sigma_e values"<<endl;
+		
+			status=options->get_val<std::vector<number> >(sectionName, string("sigma_e"),sigma_e);
+			if(status)
+			{
+				clog<<"Didn't find sigma_e values for covariance"<<endl;
+				exit(1);
+		  	}
+			else
+			{
+				clog<<"Found "<<sigma_e.size()<<" sigma_e values"<<endl;
+				for(int i=0; i<sigma_e.size(); i++)
+				{
+					clog<<i<<":"<<sigma_e[i]<<endl;
+					sigma_e[i]*=sqrt(2.);
+				}
+			}
+		}
+		else
+		{
+			clog<<"found sigma_e_file:"<<sigma_e_file<<endl;
+			matrix sigma_e_mat;
+			sigma_e_mat.readFromASCII_marika((sigma_e_file).c_str());
+			for(int i=0; i<sigma_e_mat.size(); i++)
+			{
+				clog<<i<<":"<<sigma_e_mat.get(i)<<endl;
+				sigma_e.push_back(sqrt(2.)*sigma_e_mat.get(i));
+			}
+		}
+
+		vector<number> ngal_effective;
+		string ngal_file;
+		status=options->get_val<string>(sectionName, string("ngal_file"),ngal_file);
+		if(status)
+		{
+			clog<<"Didn't find ngal_file for covariance, going to look for ngal_effective values"<<endl;
+		
+			status=options->get_val<std::vector<number> >(sectionName, string("ngal_effective"),ngal_effective);
+			if(status)
+			{
+				clog<<"Didn't find ngal_effective values for covariance"<<endl;
+				exit(1);
+		  	}
+			else
+			{
+				clog<<"Found "<<ngal_effective.size()<<" ngal_effective values"<<endl;
+				for(int i=0; i<ngal_effective.size(); i++)
+				{
+					clog<<i<<":"<<ngal_effective[i]<<endl;
+					ngal_effective[i]*=1./arcmin/arcmin;
+				}
+			}
+		}
+		else
+		{
+			clog<<"found ngal_file:"<<ngal_file<<endl;
+			matrix ngal_mat;
+			ngal_mat.readFromASCII_marika((ngal_file).c_str());
+			for(int i=0; i<ngal_mat.size(); i++)
+			{
+				clog<<i<<":"<<ngal_mat.get(i)<<endl;
+				ngal_effective.push_back(ngal_mat.get(i)/arcmin/arcmin);
+			}
+		}
+
+		number Area;
+		status=options->get_val<number>(sectionName, string("Area"),Area);
+		if(status)
+		{
+			clog<<"Didn't find Area values for covariance"<<endl;
+			exit(1);
 	  	}
 		else
 		{
-			clog<<"calculateCov set to "<<calculateCov<<endl;
-			if(calculateCov)
-			{
-				int OnlyBmodes_Cov;
-				status=options->get_val<int>(sectionName, string("OnlyBmodes_Cov"), OnlyBmodes_Cov);
-				if(status)
-				{
-					clog<<"Didn't get the value of OnlyBmodes_Cov, setting it to 0"<<endl;
-					config->OnlyB=false;
-				}
-				else
-				{
-					if(OnlyBmodes_Cov)
-					{
-						clog<<"Going to only calculate the B-mode covariance"<<endl;
-						config->OnlyB=true;
-					}
-					else
-					{
-						clog<<"Going to calculate all covariances"<<endl;
-						config->OnlyB=false;
-					}
-				}
-				config->calCov=true;
+			clog<<"Found Area="<<Area<<endl;
+			Area*=pow(pi/180.,2);//change to radians
+		}
 
-				string sigma_e_file;
-				vector<number> sigma_e;
-				// first read sigma_e if not given exit
-				status=options->get_val<string>(sectionName, string("sigma_e_file"),sigma_e_file);
-				if(status)
-				{
-					clog<<"Didn't find sigma_e_file for covariance, going to look for sigma_e values"<<endl;
-				
-					status=options->get_val<std::vector<number> >(sectionName, string("sigma_e"),sigma_e);
-					if(status)
-					{
-						clog<<"Didn't find sigma_e values for covariance"<<endl;
-						exit(1);
-				  	}
-					else
-					{
-						clog<<"Found "<<sigma_e.size()<<" sigma_e values"<<endl;
-						for(int i=0; i<sigma_e.size(); i++)
-						{
-							clog<<i<<":"<<sigma_e[i]<<endl;
-							sigma_e[i]*=sqrt(2.);
-						}
-					}
-				}
-				else
-				{
-					clog<<"found sigma_e_file:"<<sigma_e_file<<endl;
-					matrix sigma_e_mat;
-					sigma_e_mat.readFromASCII_marika((sigma_e_file).c_str());
-					for(int i=0; i<sigma_e_mat.size(); i++)
-					{
-						clog<<i<<":"<<sigma_e_mat.get(i)<<endl;
-						sigma_e.push_back(sqrt(2.)*sigma_e_mat.get(i));
-					}
-				}
+		cosebis->setNoise(Area,sigma_e,ngal_effective);
 
-				vector<number> ngal_effective;
-				string ngal_file;
-				status=options->get_val<string>(sectionName, string("ngal_file"),ngal_file);
-				if(status)
-				{
-					clog<<"Didn't find ngal_file for covariance, going to look for ngal_effective values"<<endl;
-				
-					status=options->get_val<std::vector<number> >(sectionName, string("ngal_effective"),ngal_effective);
-					if(status)
-					{
-						clog<<"Didn't find ngal_effective values for covariance"<<endl;
-						exit(1);
-				  	}
-					else
-					{
-						clog<<"Found "<<ngal_effective.size()<<" ngal_effective values"<<endl;
-						for(int i=0; i<ngal_effective.size(); i++)
-						{
-							clog<<i<<":"<<ngal_effective[i]<<endl;
-							ngal_effective[i]*=1./arcmin/arcmin;
-						}
-					}
-				}
-				else
-				{
-					clog<<"found ngal_file:"<<ngal_file<<endl;
-					matrix ngal_mat;
-					ngal_mat.readFromASCII_marika((ngal_file).c_str());
-					for(int i=0; i<ngal_mat.size(); i++)
-					{
-						clog<<i<<":"<<ngal_mat.get(i)<<endl;
-						ngal_effective.push_back(ngal_mat.get(i)/arcmin/arcmin);
-					}
-				}
+		string inputCl_cov;
+		config->cal_nonGaussian_cov=false;//if true calculates the non-Gaussian covariance
+		status=options->get_val<string>(sectionName, string("input_nonGaussian_Cl_cov"),inputCl_cov);
+		if(status)
+		{
+			clog<<"Did not find an input nonGaussian term"<<endl;
+		}
+		else
+		{
+			clog<<"got the input nonGaussian Cl covariance name:"<<inputCl_cov<<endl;
+			config->InputCl_Cov_mat.readFromASCII_marika(inputCl_cov.c_str());
 
-				number Area;
-				status=options->get_val<number>(sectionName, string("Area"),Area);
-				if(status)
-				{
-					clog<<"Didn't find Area values for covariance"<<endl;
-					exit(1);
-			  	}
-				else
-				{
-					clog<<"Found Area="<<Area<<endl;
-					Area*=pow(pi/180.,2);//change to radians
-				}
-				cosebis->setNoise(Area,sigma_e,ngal_effective);
-			}
-			else
-			{
-				config->calCov=false;
-			}
-
-			string inputCl_cov;
-			config->cal_nonGaussian_cov=false;
-			status=options->get_val<string>(sectionName, string("input_nonGaussian_Cl_cov"),inputCl_cov);
+			string input_ell;
+			status=options->get_val<string>(sectionName, string("input_nonGaussian_Cl_ell_vec"),input_ell);
 			if(status)
 			{
-				clog<<"Did not find an input nonGaussian term"<<endl;
+				clog<<"please also give a file with a vector of corresponding ell values for the non-Gaussian covariance"<<endl;
+				clog<<"Going to skip calculating non-Gaussian covariance"<<endl;
 			}
 			else
 			{
-				
-				clog<<"got the input nonGaussian Cl covariance name:"<<inputCl_cov<<endl;
-				config->InputCl_Cov_mat.readFromASCII_marika(inputCl_cov.c_str());
-
-				string input_ell;
-				status=options->get_val<string>(sectionName, string("input_nonGaussian_Cl_ell_vec"),input_ell);
-				if(status)
+				config->cal_nonGaussian_cov=true;
+				clog<<"Got the ell_vec file. Going to calculate the non-Gaussian terms for COSEBIs Cov"<<endl;
+				matrix Input_ell_mat;
+				Input_ell_mat.readFromASCII_marika(input_ell.c_str());
+				for(int i=0; i<Input_ell_mat.rows; i++)
 				{
-					clog<<"please also give a file with a vector of corresponding ell values for the non-Gaussian covariance"<<endl;
-					clog<<"Going to skip calculating non-Gaussian covariance"<<endl;
+					config->Input_ell_vec.push_back(Input_ell_mat.get(i));
 				}
-				else
-				{
-					config->cal_nonGaussian_cov=true;
-					clog<<"Got the ell_vec file. Going to calculate the non-Gaussian terms for COSEBIs Cov"<<endl;
-					matrix Input_ell_mat;
-					Input_ell_mat.readFromASCII_marika(input_ell.c_str());
-					for(int i=0; i<Input_ell_mat.rows; i++)
-					{
-						config->Input_ell_vec.push_back(Input_ell_mat.get(i));
-					}
-					clog<<"initialised Input_ell_vec with "<<config->Input_ell_vec.size()<<" ell bins"<<endl;
-				}
+				clog<<"initialised Input_ell_vec with "<<config->Input_ell_vec.size()<<" ell bins"<<endl;
 			}
 		}
 
@@ -376,19 +320,19 @@ extern "C"
 		else
 			clog<<"Got the value of nBins="<<config->nBins<<endl;
 
-		string input_nPair_files_suffix;
-		status=options->get_val(sectionName, string("input_nPair_files_suffix"),input_nPair_files_suffix);
+		string input_nPair_files_prefix;
+		status=options->get_val(sectionName, string("input_nPair_files_prefix"),input_nPair_files_prefix);
 		if(status)
 		{
 			config->calNoiseCov=false;
-			clog<<"No input_nPair_files_suffix was given."<<endl;
+			clog<<"No input_nPair_files_preffix was given."<<endl;
 		}
 		else
 		{
 			config->calNoiseCov=true;
-			clog<<input_nPair_files_suffix<<" is the input nPair suffix."<<endl;
-			string input_nPair_files_suffix_end="";
-			status=options->get_val(sectionName, string("input_nPair_files_suffix_end"),input_nPair_files_suffix_end);
+			clog<<input_nPair_files_prefix<<" is the input nPair prefix."<<endl;
+			string input_nPair_files_suffix="";
+			status=options->get_val(sectionName, string("input_nPair_files_suffix"),input_nPair_files_suffix);
 			int Athena_input=1;
 			bool Athena= true;
 			status=options->get_val(sectionName, string("Athena_input"),Athena_input);
@@ -413,9 +357,9 @@ extern "C"
 				{
 					for(int bin2=bin1; bin2<config->nBins; bin2++)
 					{
-						string FileName=input_nPair_files_suffix+
+						string FileName=input_nPair_files_prefix+
 							+("_nBins_")+toString(config->nBins)+string("_Bin")
-							+toString(bin1+1)+string("_Bin")+toString(bin2+1)+input_nPair_files_suffix_end;
+							+toString(bin1+1)+string("_Bin")+toString(bin2+1)+input_nPair_files_suffix;
 						FileName_vec.push_back(FileName);
 					}
 				}
@@ -468,26 +412,13 @@ extern "C"
 			}
 		}
 
+		// get ell from cosmosis and turn into ln(ell)
 		vector<number> ell,logell;
 		status = block->get_val(config->input_section_name, string("ell"), ell);
 		int nell=ell.size();
 		for(int i=0; i<nell; i++)
 			logell.push_back(log(ell[i]));
 
-
-
-		// if ((ell[0]>MinPowerCOSEBIs) || (ell[nell-1]<MaxPowerCOSEBIs) || (nell<PowerTableNumberCOSEBIs))
-		// {
-		// 	clog<<"*************************************"<<endl;
-		// 	clog<<"****************WARNING**************"<<endl;
-		// 	clog<<"ell range or number of points not sufficient for COSEBIs"<<endl;
-		// 	clog<<"your input ell_min="<<ell[0]<<"  ell_max="<<ell[nell-1]<<" n_ell="<<nell<<endl;
-		// 	clog<<" For a higher precision at least use this range:"<<endl;
-		// 	clog<<"ell_min="<<MinPowerCOSEBIs<<"  ell_max="
-		// 		<<MaxPowerCOSEBIs<<" n_ell="<<PowerTableNumberCOSEBIs<<endl;
-		// 	clog<<"*************END OF WARNING***********"<<endl;
-		// 	clog<<"*************************************"<<endl;
-		// }
 		
 		if (status) 
 		{
@@ -496,8 +427,7 @@ extern "C"
 		}
 		
 
-		matrix En_mat;
-		vector<number> En_vec_all;
+		// Put Cl a vector of vectors to be sent to cosebis
 		vector <vector<number> > InputPower_vec_vec;
 		int nPairs=0;
 		for (int i_bin=1; i_bin<=num_z_bin_A; i_bin++) 
@@ -510,20 +440,20 @@ extern "C"
 				bool has_val = block->has_val(config->input_section_name, name_in);
 				if (has_val) 
 				{
-					//clog<<name_in<<endl;
 					status = block->get_val<vector<number> >(config->input_section_name, name_in, C_ell);
 					InputPower_vec_vec.push_back(C_ell);
-					///put Cl in a vector to send to COSEBIs.
 					nPairs++;
 				}
 			}
 		}
 
+		//put cl and nPairs into cosebis
 		clog<<"nPairs="<<nPairs<<endl;
-		//status = block->put_val<vector<number> >(config->output_section_name, string("ell.ascii"), ell);
 		config->cosebis->setZbins(nPairs);
 		config->cosebis->setPower(logell,InputPower_vec_vec);
 
+		// Calculate the En vector, this is saved later and also used for getting the sigma_m covariance
+		matrix En_mat;
 		En_mat=config->cosebis->calEn();
 
 		//set these to zero
@@ -549,71 +479,65 @@ extern "C"
 			Cov_nG_th.printOut((config->Cov_En_name+string("_non_Gaussian")+(".ascii")).c_str(),20);
 		}
 
-		if(config->calCov)
+		matrix Cov_Bn,CovNoise,Cov_En,Cov_cosmicVar,Cov_mixed;
+
+		// calculate and save theory Bn covariance. This assumes simple geometry.
+		Cov_Bn=config->cosebis->calBCov();
+		Cov_Bn.printOut((config->Cov_En_name+string("_TheoryBn.ascii")).c_str(),20);
+
+		// This section calculates Bn covariance using the input number of galaxy pairs. This is also used as the noise term for En covariance.
+		if(config->calNoiseCov)
 		{
-			matrix Cov_Bn,Cov_En,Cov_cosmicVar,Cov_mixed,CovNoise;
-			Cov_Bn=config->cosebis->calBCov();
-			Cov_Bn.printOut((config->Cov_En_name+string("_TheoryBn.ascii")).c_str(),20);
-			if(config->calNoiseCov)
+			if((int((config->nBins)*(config->nBins+1))/2)==nPairs)
 			{
-				if((int((config->nBins)*(config->nBins+1))/2)==nPairs)
-				{
-					CovNoise=config->cosebis->calNoiseCov_fromInputNpair();
-					CovNoise.printOut((config->Cov_En_name+string("_NoiseOnly.ascii")).c_str(),20);				
-				}
-				else
-				{
-					clog<<"!!!!WARNING!!!! the number of bins for the noise only case does not match the input number of redshift bins"<<endl;
-				}
+				CovNoise=config->cosebis->calNoiseCov_fromInputNpair();
+				CovNoise.printOut((config->Cov_En_name+string("_NoiseOnly.ascii")).c_str(),20);				
 			}
-			if(!config->OnlyB)
+			else
 			{
-				Cov_En=config->cosebis->calCov();
-				Cov_En.printOut((config->Cov_En_name+string("_TheoryEn.ascii")).c_str(),20);
-
-				config->cosebis->setNoiseToZero();
-				Cov_cosmicVar=config->cosebis->calCov();
-				Cov_cosmicVar.printOut((config->Cov_En_name+string("_TheoryCosmicVar.ascii")).c_str(),20);
-
-				Cov_mixed=Cov_En-Cov_Bn-Cov_cosmicVar;
-				Cov_mixed.printOut((config->Cov_En_name+string("_TheoryMixed.ascii")).c_str(),20);
-				if(config->calNoiseCov)
-				{
-					if((int((config->nBins)*(config->nBins+1))/2)==nPairs)
-					{
-						Cov_En=Cov_cosmicVar+Cov_mixed+CovNoise;
-						Cov_En.printOut((config->Cov_En_name+string("_NoiseJustForNoise.ascii")).c_str(),20);
-						//This one is experimental
-						for(int i=0; i<Cov_mixed.rows;i++)
-							for(int j=0; j<Cov_mixed.columns;j++)
-							{
-								if((Cov_Bn.get(i,j)==0) || (CovNoise.get(i,j)/Cov_Bn.get(i,j)<0.))
-									Cov_mixed.load(i,j,Cov_mixed.get(i,j));
-								else
-									Cov_mixed.load(i,j,sqrt(CovNoise.get(i,j)/Cov_Bn.get(i,j))*Cov_mixed.get(i,j));
-							}
-						Cov_mixed.printOut((config->Cov_En_name+string("_MixedNoise.ascii")).c_str(),20);
-					}
-					else
-					{
-						clog<<"!!!!WARNING!!!! the number of bins for the noise only case does not match the input number of redshift bins"<<endl;
-					}
-				}
-				if(config->cal_nonGaussian_cov)
-				{
-					Cov_En=Cov_En+Cov_nG_th;
-				}
-				if( (config->sigma_m) || (config->sigma_m_cov_read) )
-				{
-					Cov_En=Cov_En+Cov_sigm;
-				}
-				Cov_En.printOut((config->Cov_En_name+string(".ascii")).c_str(),20);
+				clog<<"!!!!WARNING!!!! the number of bins for the noise only case does not match the input number of redshift bins"<<endl;
 			}
 		}
-		
+
+		// Calculate the En theory Gaussian covariance assuming simple geometry.
+		Cov_En=config->cosebis->calCov();
+		Cov_En.printOut((config->Cov_En_name+string("_TheoryEn.ascii")).c_str(),20);
+
+		// Calculates the Cosmic variance term for En covariance
+		config->cosebis->setNoiseToZero();
+		Cov_cosmicVar=config->cosebis->calCov();
+		Cov_cosmicVar.printOut((config->Cov_En_name+string("_TheoryCosmicVar.ascii")).c_str(),20);
+
+		// Calculates the Mixed term (assuming simple geometry) for En covariance
+		Cov_mixed=Cov_En-Cov_Bn-Cov_cosmicVar;
+		Cov_mixed.printOut((config->Cov_En_name+string("_TheoryMixed.ascii")).c_str(),20);
+
+		// Calculates the Gaussian covariance including the correct geometry effectes for the noise-only term.
+		if(config->calNoiseCov)
+		{
+			if((int((config->nBins)*(config->nBins+1))/2)==nPairs)
+			{
+				Cov_En=Cov_cosmicVar+Cov_mixed+CovNoise;
+				Cov_En.printOut((config->Cov_En_name+string("_NoiseJustForNoise.ascii")).c_str(),20);
+			}
+			else
+				clog<<"!!!!WARNING!!!! the number of bins for the noise only case does not match the input number of redshift bins"<<endl;
+		}
+
+		// Adds the non-Gaussian term to the covariance calculated in the previous step
+		if(config->cal_nonGaussian_cov)
+			Cov_En=Cov_En+Cov_nG_th;
+
+		// Adds the sigma_m covaraince to the covariance calculated in the previous step
+		if( (config->sigma_m) || (config->sigma_m_cov_read) )
+			Cov_En=Cov_En+Cov_sigm;
+
+		// prints out the main result
+		Cov_En.printOut((config->Cov_En_name+string(".ascii")).c_str(),20);
 
 		int n_max=config->n_max;
 
+		// puts the En for the parameters used to calculate the covariance matrix in block
 		vector<number> En_vec(n_max);
 		vector<int> n_vals(n_max);
 		int p1=0;
@@ -630,8 +554,8 @@ extern "C"
 				p1++;
 			}
 		}
+
 		status = block->put_val<int>(config->output_section_name, string("n_mode"), n_max);
-		status = block->put_val<bool>(config->output_section_name, string("b_modes"), config->IsItBmodes);
 		status = block->put_val<double>(config->output_section_name, string("theta_min"), config->theta_min);
 		status = block->put_val<double>(config->output_section_name, string("theta_max"), config->theta_max);
 		status = block->put_val<double>(config->output_section_name, string("nbin_a"), num_z_bin_A);

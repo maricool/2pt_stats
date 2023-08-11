@@ -2,7 +2,7 @@ name: cosebis
 version: Jan2023
 purpose: "Calculate COSEBIs from C_ell power spectra"
 url: ""
-interface: libcosebis.so
+interface: cl_to_cosebis.so
 attribution: [Marika Asgari, Patrick Simon]
 rules:
     "If you use this module then please cite the papers below"
@@ -14,8 +14,13 @@ assumptions:
     - "Flat sky approximation"
 
 explanation: |
-    COSEBIs are a set of alternative two-point statistics designed to be reasonably localised
-    their response to angular scale ell while also easy to measure from data.
+    COSEBIs (Complete Orthogonal Sets of E/B-Integral) are a set of alternative two-point statistics 
+    designed to separate E/B-modes completely on a finite angular range. They also have reasonably localised
+    response to Fourier modes, ell, while also easy to measure from data.
+
+    The expectation value of B-modes is zero if there is no B-mode power spectra. 
+    To calculate B-mode COSEBIs simply switch input_section_name to take B-mode Cls as input 
+    and output_section_name to avoid mixing E/B-modes.
 
     This module calculates both E_n and B_n log-COSEBIs from https://arxiv.org/abs/1002.2136 
     and dimensionless COSEBIs from https://arxiv.org/abs/2110.09774. 
@@ -45,15 +50,15 @@ params:
         Wn_Output_FolderName:
             meaning: "Folder name for Wn files."
             type: str
-            default: "cosebis_dir/WnLog/"
+            default: COSEBIS_DIR "/WnLog/"
         Roots_n_Norms_FolderName:
             meaning: "Folder name for Roots and Normalisations."
             type: str
-            default: "cosebis_dir/TLogsRootsAndNorms"
+            default: COSEBIS_DIR "/TLogsRootsAndNorms"
         Tn_Output_FolderName:
             meaning:  "Folder name for Tn filters"
             type: str
-            default: "cosebis_dir/TpnLog/"
+            default: COSEBIS_DIR "/TpnLog/"
         cterm_section_name:
             meaning: "section name in values.ini for c-term parameters."
             type: str

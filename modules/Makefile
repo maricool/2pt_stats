@@ -12,7 +12,7 @@ endif
 
 OBJS     = matrix.o function_cosebis.o ticker.o tostring.o tolower.o timestamp.o \
 		   globaldef.o Integrate.o COSEBIs.o WnLog.o TpnLogRadian.o \
-		   BandPower_g.o BandPower_W.o BandPower.o errors.o
+		   BandPower_g.o BandPower_W.o BandPower.o errors.o psi_stats.o psi_filters.o
 
 LIBNAME  = libcolib.a
 
@@ -36,4 +36,3 @@ all: $(HEADER) $(OBJS)
 clean:
 	rm -f $(LIBNAME)
 	rm -f *.o
-

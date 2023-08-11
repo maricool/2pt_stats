@@ -99,10 +99,20 @@ void COSEBIs::setNoise(number A1,vector<number> sigma_e_vec1,vector<number> nBar
 	A=A1;
 	noise_vec.clear();
 	sigma_e_vec=sigma_e_vec1;
-	for(int bin=0; bin<sigma_e_vec.size(); bin++)
+	if(sigma_e_vec.size()==nBar_vec.size())
 	{
-		noise_vec.push_back(sigma_e_vec[bin]*sigma_e_vec[bin]/(2.*nBar_vec[bin]));
-		clog<<"noise_vec["<<bin<<"]="<<noise_vec[bin]<<endl;
+		for(int bin=0; bin<sigma_e_vec.size(); bin++)
+		{
+			noise_vec.push_back(sigma_e_vec[bin]*sigma_e_vec[bin]/(2.*nBar_vec[bin]));
+			clog<<"noise_vec["<<bin<<"]="<<noise_vec[bin]<<endl;
+		}
+	}
+	else
+	{
+		clog<<"sigma_e_vec.size()="<<sigma_e_vec.size()<<" != nBar_vec.size()=="<<nBar_vec.size()<<endl;
+		clog<<"You need to give the same number of simga_e and ngal values, equal to the number of tomographic bins."<<endl;
+		clog<<"Exiting now..."<<endl;
+		exit(1);
 	}
 }
 
