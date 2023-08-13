@@ -2,12 +2,14 @@ include ${COSMOSIS_SRC_DIR}/config/compilers.mk
 
 COLIB     = modules/libcolib.a
 
-# ALL_LIBS = band_powers/band_powers.so \
+ALL_LIBS = band_powers/band_powers.so \
            bin_xi/bin_xi.so \
            cl_to_cosebis/cl_to_cosebis.so \
-           cosebis_covariance/cosebis_covariance.so
+           cosebis_covariance/cosebis_covariance.so \
+           cl_to_psi/cl_to_psi.so \
+           psi_covariance/psi_covariance.so
 
-ALL_LIBS = cl_to_psi/cl_to_psi.so psi_covariance/psi_covariance.so
+# ALL_LIBS = cl_to_psi/cl_to_psi.so psi_covariance/psi_covariance.so
 
 
 all: $(ALL_LIBS)
