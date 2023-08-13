@@ -9,8 +9,6 @@ ALL_LIBS = band_powers/band_powers.so \
            cl_to_psi/cl_to_psi.so \
            psi_covariance/psi_covariance.so
 
-# ALL_LIBS = cl_to_psi/cl_to_psi.so psi_covariance/psi_covariance.so
-
 
 all: $(ALL_LIBS)
      
