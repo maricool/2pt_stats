@@ -37,20 +37,22 @@ public:
 	//Constructors
 	COSEBIs();
 	COSEBIs(int nMax,number thetamin, number thetamax, int nPairs,
-		string WnFolderName,string TnFolderName,string OutputTnFolderName);
+		string WnFolderName,string TnFolderName,string OutputTnFolderName,string WnFileName = "WnLog",int precision = 20);
 	//destructor
 	~COSEBIs();
 	//Constructor calls initialize
 	void initialize(int nMaximum,number thetamin, number thetamax, int nPairs
 		,string WnFolderName1=COSEBIS_DIR "/WnLog/"
 		,string TnFolderName1=COSEBIS_DIR "/TLogsRootsAndNorms/"
-		,string OutputTnFolderName="./cosebis/TpnLog/");
+		,string OutputTnFolderName="./cosebis/TpnLog/"
+		,string WnFileName = "WnLog"
+		,int precision = 20);
 	//sets the number of redshift bins
 	void setZbins(int nPairs1);
 	///sets the COSEBIs parameters
 	void setEparam(int nMax1,number thetamin1, number thetamax1);
 	///initializes Wn_vec
-	void setWns(int nMax);
+	void setWns(int nMax, int Nlbins = 1000000);
 	///initializes Tp_n_vec and Tm_n_vec
 	void setTs(int nMaximum);
 	///sets the noise parameters for calculating the covariance 
@@ -152,7 +154,7 @@ public:
 
 
 private: //private variables
-  string WnFolderName,TnFolderName,OutputTnFolderName;
+  string WnFolderName,TnFolderName,OutputTnFolderName,WnFileName;
   vector<WnLog> Wn_vec;
   vector<TpnLog> Tpn_vec; 
   vector<function_cosebis> powerspectrum_vec;
@@ -179,7 +181,7 @@ private: //private variables
   int redshiftPair,rp1,rp2,rp3,rp4;
   int nW,mW,counter,nT,iRand;  
   int ell; 
-
+  int precision;
 
   ///default is false
   bool TpmNotDone,noisyKsi, BCov_on,DEn_calculated,

@@ -5,13 +5,14 @@ COSEBIs::COSEBIs(){}
 COSEBIs::~COSEBIs(){}
 
 COSEBIs::COSEBIs(int nMaximum,number thetamin, number thetamax, int nPairs
-	,string WnFolderName,string TnFolderName,string OutputTnFolderName)
+	,string WnFolderName,string TnFolderName,string OutputTnFolderName,string WnFileName,int precision)
 {
-	initialize(nMaximum,thetamin, thetamax, nPairs, WnFolderName, TnFolderName,OutputTnFolderName);
+	initialize(nMaximum,thetamin, thetamax, nPairs, WnFolderName, TnFolderName,OutputTnFolderName,WnFileName,precision);
 }
 
 void COSEBIs::initialize(int nMaximum,number thetamin, number thetamax, int nPairs
-	,string WnFolderName1,string TnFolderName1,string OutputTnFolderName1)
+	,string WnFolderName1,string TnFolderName1,string OutputTnFolderName1
+	,string WnFileName1,int precision1)
 {
 	clog<<"in COSEBIs initialize"<<endl;
 	DEn_calculated=false;
@@ -24,8 +25,12 @@ void COSEBIs::initialize(int nMaximum,number thetamin, number thetamax, int nPai
 	Cov_Input=false;
 	Inner_integ=false;
 	WnFolderName=WnFolderName1;
+	WnFileName = WnFileName1;
 	TnFolderName=TnFolderName1;
 	OutputTnFolderName=OutputTnFolderName1;
+	WnFileName = WnFileName1;
+	precision  = precision1;
+
 
 	setEparam(nMaximum,thetamin*arcmin,thetamax*arcmin);
 	setZbins(nPairs);
@@ -56,13 +61,13 @@ void COSEBIs::setEparam(int nMaximum1,number thetamin1, number thetamax1)
 	LHIGH=high*20./thetamax;
 }
 
-void COSEBIs::setWns(int nMaximum)
+void COSEBIs::setWns(int nMaximum, int Nlbins)
 {
 	if(!WnSet)
 	{
         EnInteglimitSet=false;
 		clog<<"Wn not set setting now:"<<endl;
-		WnLog WnL(thetamin,thetamax,nMaximum,TnFolderName,WnFolderName);
+		WnLog WnL(thetamin,thetamax,nMaximum,TnFolderName,WnFolderName,WnFileName,precision,Nlbins);
 		Wn_vec.clear();
 		//these have to be separate otherwise it doesn't work
 		for(int n=0; n<nMaximum; n++)

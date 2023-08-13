@@ -63,15 +63,15 @@ class function_cosebis
     void readfromascii(const char*,int,int,int);
     void makeTable(number,number,int,bool=false);
 	//makes tables of variable data points for different ranges
-    void makeTable_parts(vector<number>,vector<number>,vector<int>,int numberOfParts,bool=false);
+    void makeTable_parts(vector<number>,vector<number>,vector<int>,int numberOfParts,bool logarithmic=false);
     void useTable();
     void noTable();
-    bool saveTable();
-    bool saveTable_parts();
-    bool loadTable(number,number,int,bool=false);
-    bool loadTable_noheader(number from, number to, int N,bool logarithmic);
+    bool saveTable(int precision = 20);
+    bool saveTable_parts(int precision = 20);
+    bool loadTable(number,number,int,bool=false,int precision=20);
+    bool loadTable_noheader(number from, number to, int N,bool logarithmic,int precision=20);
 	//loads tables of variable data points
-    bool loadTable_parts(vector<number> from, vector<number> to, vector<int> N,int numberOfParts,bool logarithmic=false);
+    bool loadTable_parts(vector<number> from, vector<number> to, vector<int> N,int numberOfParts,bool logarithmic=false,int precision=20);
     
     void loadWithValues(matrix&, matrix&,bool=false);
     void loadWithValues(vector<number>&,vector<number>&,bool=false);

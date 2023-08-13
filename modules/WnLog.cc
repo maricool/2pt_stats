@@ -11,11 +11,13 @@ WnLog::WnLog(): Wn_table()
 }
 
 WnLog::WnLog(number thetamin1,number thetamax1,int nMax,string TnFolderName,string WnFolderName
-		,string WnFileName)
+		,string WnFileName, int precision,int Nlbins)
 {
 
   setWnLogName(TnFolderName,WnFolderName,WnFileName);
   setTheta(thetamin1,thetamax1,nMax);
+  setPrecision(precision);
+  setNlbins(Nlbins);
 }
 
 WnLog::~WnLog(){}
@@ -31,6 +33,16 @@ void WnLog::setWnLogName(string TnFolderName1,string WnFolderName1,string WnFile
 	TnFolderName=TnFolderName1;
 	WnFolderName=WnFolderName1;
 	WnFileName=WnFileName1;
+}
+
+void WnLog::setPrecision(int precision1)
+{
+	precision=precision1;
+}
+
+void WnLog::setNlbins(int Nlbins1)
+{
+	Nlbins=Nlbins1;
 }
 
 void WnLog::setTheta(number thetamin1,number thetamax1,int nMax)
@@ -55,6 +67,7 @@ void WnLog::setTheta(number thetamin1,number thetamax1,int nMax)
 		clog<<"exiting now ..."<<endl;
 		exit(1);
 	}
+
 
 	if(fNorm.fail())
 	{
@@ -108,13 +121,13 @@ void WnLog::set(int order)
 	{
 		if(!CheckFolderExist(WnFolderName))
 		{
-			clog<<"making foler for Wn:"<<WnFolderName<<endl;
+			clog<<"Making the folder for Wn:"<<WnFolderName<<endl;
 			mkdir((WnFolderName).c_str(), 0777);
 		}
 		if(!CheckFolderExist(WnFolderName))
 		{
 			clog<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"<<endl;
-			clog<<"!!! Can't make the Folder for W functions !!!!!!!"<<endl;
+			clog<<"!!! Can't make the Folder for Wn functions !!!!!!!"<<endl;
 			clog<<"!!!!!!!!!!! WILL NOT SAVE FILES !!!!!!!!!!!!!!!!!"<<endl;
 			clog<<"!!!!!!!!!!! YOU'VE BEEN WARNNED !!!!!!!!!!!!!!!!!"<<endl;
 			clog<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"<<endl;
@@ -125,13 +138,13 @@ void WnLog::set(int order)
 		// transition point between the different orders for the Gauss-Legendere integration
 		lthresh =  2.*pi/thetamax*order/10.;
 		clog<<"lthresh="<<lthresh<<endl;
-		cout << LLOW << " -- " << LHIGH << " -- " << NLBINS << endl;
+		cout << LLOW << " -- " << LHIGH << " -- " << Nlbins << endl;
 	}
 	fhandler.close();
 
 	// make table of myself and save or load existing one
-	clog<<"LLOW="<<log(LLOW)<<" LHIGH="<<log(LHIGH)<<" NLBINS="<<NLBINS<<endl;
-	loadTable(LLOW,LHIGH,NLBINS,true);
+	clog<<"LLOW="<<log(LLOW)<<" LHIGH="<<log(LHIGH)<<" Nlbins="<<Nlbins<<endl;
+	loadTable(LLOW,LHIGH,Nlbins,true,precision);
 	extrapolationOff();
 }
 
