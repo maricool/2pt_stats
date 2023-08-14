@@ -51,6 +51,18 @@ params:
             meaning: "Folder name for Wn files."
             type: str
             default: COSEBIS_DIR "/WnLog/"
+        Wn_file_name:
+            meaning: "Wn file name."
+            type: str
+            default: "WnLog"
+        table_precision:
+            meaning: "number of digits used in saved WnLog table"
+            type: int 
+            default: 20
+        number_of_Wn_l_bins:
+            meaning: "number of log ell bins used in saved WnLog table"
+            type: int 
+            default: 1000000
         Roots_n_Norms_FolderName:
             meaning: "Folder name for Roots and Normalisations."
             type: str
