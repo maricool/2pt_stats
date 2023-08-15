@@ -122,11 +122,17 @@ extern "C"
 			clog<<"Got the value of n_max="<<config->n_max<<endl;
 
 		//get Wn, Tn and output Tn folder names
-		string WnFolderName,TnFolderName,OutputTnFolderName;
+		string WnFolderName,TnFolderName,OutputTnFolderName,WnFileName;
 		WnFolderName= COSEBIS_DIR "WnLog/";
+		WnFileName   = "WnLog";
 		TnFolderName= COSEBIS_DIR "TLogsRootsAndNorms/";
 		OutputTnFolderName=COSEBIS_DIR "TpnLog/";
 
+		// int precision = 20;
+		// int Nlbins    = 1000000;
+
+		int precision = 10;
+		int Nlbins    = 100000;
 
 		status=options->get_val<string>(sectionName, string("Wn_Output_FolderName"), WnFolderName);
 		if(status)
@@ -136,6 +142,33 @@ extern "C"
 		}
 		else
 			clog<<"WnLog folder name is:"<<WnFolderName<<endl;
+
+		status=options->get_val<string>(sectionName, string("Wn_file_name"), WnFileName);
+		if(status)
+		{
+			clog<<"Could not find Wn file name in Wn_file_name, ";
+			clog<<"setting to default: "<<WnFileName<<endl;
+		}
+		else
+			clog<<"Wn file name is:"<<WnFileName<<endl;
+
+		status=options->get_val<int>(sectionName, string("table_precision"), precision);
+		if(status)
+		{
+			clog<<"Could not find the number of digits in table_precision, ";
+			clog<<"setting to default: "<<precision<<endl;
+		}
+		else
+			clog<<"table_precision is:"<<precision<<endl;
+
+		status=options->get_val<int>(sectionName, string("number_of_Wn_l_bins"), Nlbins);
+		if(status)
+		{
+			clog<<"Could not find number_of_Wn_l_bins, ";
+			clog<<"setting to default: "<<Nlbins<<endl;
+		}
+		else
+			clog<<"number_of_Wn_l_bins is:"<<Nlbins<<endl;
 
 		status=options->get_val<string>(sectionName, string("Roots_n_Norms_FolderName"), TnFolderName);
 		if(status)
@@ -159,9 +192,9 @@ extern "C"
 		//   initialize COSEBIs
 		COSEBIs *cosebis = new COSEBIs();
 		cosebis->initialize(config->n_max,config->theta_min,config->theta_max,1 //npair set to one for now, will be set seperately in execute to the correct value
-				,WnFolderName,TnFolderName,OutputTnFolderName);
+				,WnFolderName,TnFolderName,OutputTnFolderName,WnFileName,precision);
 
-		cosebis->setWns(config->n_max);
+		cosebis->setWns(config->n_max,Nlbins);
 
 		config->Cov_En_name="EnCovarianceFromTheory";
 		status=options->get_val<string>(sectionName, string("cov_name"), config->Cov_En_name);

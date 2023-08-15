@@ -165,7 +165,8 @@ void function_cosebis::makeTable(number from, number to, int N, bool logarithmic
 	ticker clock;
 	for(n=0;n<N;n++)
 	{
-		if (n>0 && !(n%((int) (N/20)))){
+		if (n>0 && !(n%((int) (N/20))))
+    {
 			clock.tick(1.*n/N);
     }
 
@@ -187,7 +188,7 @@ void function_cosebis::makeTable(number from, number to, int N, bool logarithmic
 
 	clog << "\r";
 	for(int i=0;i<50;i++)
-	clog << " ";
+	 clog << " ";
 	clog << endl;
 }
 
@@ -426,18 +427,20 @@ number function_cosebis::get(number x)
   return 0.0;
 }
 
-bool function_cosebis::saveTable()
+bool function_cosebis::saveTable(int precision)
 {
   if (!tableSize)
 	 return false;
 
   ofstream file;
   file.open(tablename().c_str());
-  file.precision(20);
+  // file.precision(20);
+  file.precision(precision);
   
 
   file << "# " << tableStart << " " << tableEnd   << " " << tableSize  << " " << logTable << endl;
-  file.width(20);
+  //file.width(20);
+  file.width(precision);
   int n;
   for(n=0;n<tableSize;n++)
     file << referenceX[n]
@@ -450,7 +453,7 @@ bool function_cosebis::saveTable()
   return true;
 }
 
-bool function_cosebis::saveTable_parts()
+bool function_cosebis::saveTable_parts(int precision)
 {
   if (!tableSize)
 	 return false;
@@ -465,8 +468,11 @@ bool function_cosebis::saveTable_parts()
     	 << tableParts << " "
     	 << logTable << endl;
 
-  file.precision(20);
-  file.width(20);
+  // file.precision(20);
+  // file.width(20);
+
+  file.precision(precision);
+  file.width(precision);
 
   int n;
   for(n=0;n<tableSize;n++)
@@ -480,14 +486,14 @@ bool function_cosebis::saveTable_parts()
   return true;
 }
 
-bool function_cosebis::loadTable(number from, number to, int N,bool logarithmic)
+bool function_cosebis::loadTable(number from, number to, int N,bool logarithmic,int precision)
 {
 	ifstream file;
 	file.open(tablename().c_str());
 	if (!file.is_open())
 	{
 		makeTable(from,to,N,logarithmic);
-		saveTable();
+		saveTable(precision);
 		return true;
 	}
 	
@@ -525,14 +531,14 @@ bool function_cosebis::loadTable(number from, number to, int N,bool logarithmic)
 	return true;
 }
 ///another loadTable which doesn't have a header
-bool function_cosebis::loadTable_noheader(number from, number to, int N,bool logarithmic)
+bool function_cosebis::loadTable_noheader(number from, number to, int N,bool logarithmic, int precision)
 {
     ifstream file;
     file.open(tablename().c_str());
     if (!file.is_open())
       {
 	makeTable(from,to,N,logarithmic);
-	saveTable();
+	saveTable(precision);
 
 	return true;
       }
@@ -573,7 +579,7 @@ bool function_cosebis::loadTable_noheader(number from, number to, int N,bool log
 }
 
 ///my loadTable, to make tables with different binning for different arguments
-bool function_cosebis::loadTable_parts(vector<number> from, vector<number> to, vector<int> N,int numberOfParts,bool logarithmic)
+bool function_cosebis::loadTable_parts(vector<number> from, vector<number> to, vector<int> N,int numberOfParts,bool logarithmic,int precision)
 {
     ifstream file;
     file.open(tablename().c_str());
@@ -581,7 +587,7 @@ bool function_cosebis::loadTable_parts(vector<number> from, vector<number> to, v
     {
     	clog<<"writing table:"<<tablename()<<endl;
     	makeTable_parts(from,to,N,numberOfParts,logarithmic);
-    	saveTable_parts();
+    	saveTable_parts(precision);
     	return true;
     }
 
