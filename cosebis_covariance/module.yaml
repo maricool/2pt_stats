@@ -72,11 +72,11 @@ params:
         table_precision:
             meaning: "number of digits used in saved WnLog table"
             type: int 
-            default: 20
+            default: 10
         number_of_Wn_l_bins:
             meaning: "number of log ell bins used in saved WnLog table"
             type: int 
-            default: 1000000
+            default: 100000
         Roots_n_Norms_FolderName:
             meaning: "Folder name for Roots and Normalisations."
             type: str

@@ -283,8 +283,11 @@ extern "C" {
 		OutputTnFolderName= COSEBIS_DIR  "TpnLog/";
 		WnFileName   = "WnLog";
 
-		int precision = 20;
-		int Nlbins    = 1000000;
+		// int precision = 20;
+		// int Nlbins    = 1000000;
+
+		int precision = 10;
+		int Nlbins    = 100000;
 
 		clog << "WnFolderName = " << WnFolderName << endl;
 

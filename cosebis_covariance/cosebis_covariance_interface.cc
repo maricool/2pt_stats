@@ -128,8 +128,11 @@ extern "C"
 		TnFolderName= COSEBIS_DIR "TLogsRootsAndNorms/";
 		OutputTnFolderName=COSEBIS_DIR "TpnLog/";
 
-		int precision = 20;
-		int Nlbins    = 1000000;
+		// int precision = 20;
+		// int Nlbins    = 1000000;
+
+		int precision = 10;
+		int Nlbins    = 100000;
 
 		status=options->get_val<string>(sectionName, string("Wn_Output_FolderName"), WnFolderName);
 		if(status)
