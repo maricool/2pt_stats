@@ -1,7 +1,7 @@
 ///for cpp use the .hh and for c the .h version
 //This deals with the inputs and outputs
+
 #include "datablock/datablock.hh"
-//This is just a header file which defines the different section names
 #include "datablock/section_names.h"
 #include <typeinfo>
 

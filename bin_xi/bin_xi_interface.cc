@@ -1,8 +1,9 @@
 ///for cpp use the .hh and for c the .h version
 //This deals with the inputs and outputs
+
 #include "datablock/datablock.hh"
-//This is just a header file which defines the different section names
 #include "datablock/section_names.h"
+
 #include <typeinfo>
 
 /*CosmoSIS interface file for going from xi_pm to binned xi_pm with added effects.
@@ -84,6 +85,45 @@ extern "C" {
 				<< name << std::endl; 
 			return 1;
 		}
+		return 0;
+	}
+
+	int getColNumber(const char* filename,string ColName)
+	{
+		// Reads in the file header and find the corresponding column number starting from 1
+		ifstream fhandler(filename);
+  
+	  	alarm(fhandler.fail(),"could not open file",filename);
+	  	if(fhandler.fail())
+	    	exit(1);
+
+	    string line;
+	  	getline(fhandler,line);
+	    stringstream stream(line);
+
+	    string str;
+	    int ColNumber = 0;
+	    bool found = false;
+
+    	while (stream >> str) 
+       	{ 
+       		if (str=="#")
+       		{
+       			//clog<<"Header started"<<endl;
+       		}
+       		else
+       		{
+	       		ColNumber++;
+				if (str == ColName)
+				{
+					found = true;
+					clog<<"ColName is "<<ColName<<" == "<<str<<", Col number is "<<ColNumber<<endl;
+					return ColNumber;
+				}
+			}
+	    }
+	    // if (!found)
+	    // 	clog<<endl<<endl<<"WARNING!!! Column name not found. The pipeline will likely CRASH soon!!!!!!!!"<<endl<<endl;
 		return 0;
 	}
 
@@ -430,6 +470,8 @@ extern "C" {
 			int n_redshift_pair,Column_theta,Column_Npair,nBins;
 			string InputNpair;
 			string InputNpair_suffix="";
+			string Column_Npair_name="";
+			string Column_theta_name="";
 			if(config->weight_theta_bins_from_input)
 			{
 				status=options->get_val<string>(sectionName, string("InputNpair"), InputNpair);
@@ -441,27 +483,45 @@ extern "C" {
 				else
 				{
 					clog<<"got the input InputNpair file: "<<InputNpair<<endl;
+					//Add Column_theta_name
+					status=options->get_val<string>(sectionName, string("Column_theta_name"), Column_theta_name);
+					if(status)
+					{
+						clog<<"no input Column_theta_name was given, will look for Column_theta (int)."<<endl;
+						status=options->get_val<int>(sectionName, string("Column_theta"), Column_theta);
+						if(status)
+						{
+							clog<<"no input Column_theta was given, setting to 1"<<endl;
+							Column_theta=1;
+						}
+						else
+						{
+							clog<<"got the input Column_theta="<<Column_theta<<endl;
+						}
+					}
+					else
+					{
+						clog<<"got the input Column_theta_name="<<Column_theta_name<<endl;
+					}
 
-					status=options->get_val<int>(sectionName, string("Column_theta"), Column_theta);
+					status=options->get_val<string>(sectionName, string("Column_Npair_name"), Column_Npair_name);
 					if(status)
 					{
-						clog<<"no input Column_theta was given, setting to 1"<<endl;
-						Column_theta=1;
+						clog<<"no input Column_Npair_name was given, will look for Column_Npair(int)."<<endl;
+						status=options->get_val<int>(sectionName, string("Column_Npair"), Column_Npair);
+						if(status)
+						{
+							clog<<"no input Column_Npair was given, setting to 8"<<endl;
+							Column_Npair=8;
+						}
+						else
+						{
+							clog<<"got the input Column_Npair="<<Column_Npair<<endl;
+						}
 					}
 					else
 					{
-						clog<<"got the input Column_theta="<<Column_theta<<endl;
-					}
-					
-					status=options->get_val<int>(sectionName, string("Column_Npair"), Column_Npair);
-					if(status)
-					{
-						clog<<"no input Column_Npair was given, setting to 8"<<endl;
-						Column_Npair=8;
-					}
-					else
-					{
-						clog<<"got the input Column_Npair="<<Column_Npair<<endl;
+						clog<<"got the input Column_Npair_name="<<Column_Npair_name<<endl;
 					}
 
 					status=options->get_val<int>(sectionName, string("nBins_in"), nBins);
@@ -511,6 +571,16 @@ extern "C" {
 					{
 						matrix Npair_mat_in;
 						Npair_mat_in.readFromASCII_marika((FileName_vec[r]).c_str());
+						if(Column_theta_name!="")
+						{
+							clog<<"Column_theta_name is given, going to find Column number for it"<<endl;
+							Column_theta = getColNumber((FileName_vec[r]).c_str(),Column_theta_name);
+						}
+						else
+							clog<<"Column_theta_name is NOT given!!!!"<<endl;
+						if(Column_Npair_name!="")
+							Column_Npair = getColNumber((FileName_vec[r]).c_str(),Column_Npair_name);
+
 						matrix theta=Npair_mat_in.getColumn(Column_theta-1);
 						vector<number> theta_vec(theta.rows);
 						for(int i=0; i<theta.rows; i++)
