@@ -1,5 +1,6 @@
-#include "cosmosis/datablock/datablock.hh"
-#include "cosmosis/datablock/section_names.h"
+
+#include "datablock/datablock.hh"
+#include "datablock/section_names.h"
 
 #include "psi_stats.h"
 
