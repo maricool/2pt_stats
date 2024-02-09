@@ -26,6 +26,7 @@ extern "C"
 	{
 		string sectionName;
 		string input_section_name;
+		string input_section_name_bmode;
 		string output_section_name;
 		number thetamin;
 		number thetamax;
@@ -394,6 +395,17 @@ extern "C"
 				}
 				else
 					clog<<"got the value of input_section_name:"<<config->input_section_name<<endl;
+				
+				//check if input section name for b-mode power is given, otherwise use default
+				status=options->get_val<string>(sectionName, string("input_section_name_bmode"), config->input_section_name_bmode);
+				if (status) 
+				{
+					clog<<"Could not load input_section_name_bmode to band power,";
+					clog<<" setting to default: "<< "shear_cl_b" <<endl;
+					config->input_section_name_bmode="shear_cl_b";
+				}
+				else
+					clog<<"got the value of input_section_name_bmode:"<<config->input_section_name_bmode<<endl;
 
 			}
 			else if(type_str=="cosmic_shear_b")
@@ -418,7 +430,7 @@ extern "C"
 						NLBINS,
 						FolderName,gFileName,WFileName,real);
 				config->BP4=BP4;
-				//****Note: B-mode CL is not included in cosmosis. For now this is set to E-mode CL***
+
 				//check if input section name is given in the ini file otherwise use the default
 				status=options->get_val<string>(sectionName, string("input_section_name"), config->input_section_name);
 				if (status) 
@@ -429,6 +441,17 @@ extern "C"
 				}
 				else
 					clog<<"got the value of input_section_name:"<<config->input_section_name<<endl;
+				
+				//check if input section name for b-mode power is given, otherwise use default
+				status=options->get_val<string>(sectionName, string("input_section_name_bmode"), config->input_section_name_bmode);
+				if (status) 
+				{
+					clog<<"Could not load input_section_name_bmode to band power,";
+					clog<<" setting to default: "<< "shear_cl_b" <<endl;
+					config->input_section_name_bmode="shear_cl_b";
+				}
+				else
+					clog<<"got the value of input_section_name_bmode:"<<config->input_section_name_bmode<<endl;
 			}
 			else
 			{
@@ -510,10 +533,12 @@ extern "C"
 				string name_in=string("bin_")+toString(i_bin)+string("_")+toString(j_bin);
 				string index_name_in=string("index_")+name_in;
 				bool has_val = block->has_val(config->input_section_name, name_in);
+				bool has_val_bmode = block->has_val(config->input_section_name_bmode, name_in);
 				if (has_val) 
 				{
 					nPairs++;
 					status = block->get_val<vector<number> >(config->input_section_name, name_in, C_ell);
+
 					//find BP for this bin and save it.
 					matrix BP_mat;
 
@@ -532,26 +557,60 @@ extern "C"
 						//config->BP0->setInput_single(logell,C_ell);
 						config->BP0->setInput_single_withExtrapolation(logell,C_ell);
 						matrix BP_mat0;
+						matrix BP_mat0_BB;
 						BP_mat0=config->BP0->calBP();
 
 						//config->BP4->setInput_single(logell,C_ell);
 						config->BP4->setInput_single_withExtrapolation(logell,C_ell);
 						matrix BP_mat4;
+						matrix BP_mat4_BB;
 						BP_mat4=config->BP4->calBP();
 
 						BP_mat=BP_mat0/2.+BP_mat4/2.;
+
+						if(has_val_bmode)
+						{
+							vector<number> C_ell_bmode;
+							status = block->get_val<vector<number> >(config->input_section_name_bmode, name_in, C_ell_bmode);
+
+							config->BP0->setInput_single_withExtrapolation(logell,C_ell_bmode);
+							BP_mat0_BB=config->BP0->calBP();
+
+							config->BP4->setInput_single_withExtrapolation(logell,C_ell_bmode);
+							BP_mat4_BB=config->BP4->calBP();
+
+							BP_mat= BP_mat + BP_mat0_BB/2. - BP_mat4_BB/2.;
+						}
+
 					}
 					else if(config->type==4)
 					{
 						config->BP0->setInput_single_withExtrapolation(logell,C_ell);
 						matrix BP_mat0;
+						matrix BP_mat0_BB;
 						BP_mat0=config->BP0->calBP();
 
 						config->BP4->setInput_single_withExtrapolation(logell,C_ell);
 						matrix BP_mat4;
+						matrix BP_mat4_BB;
 						BP_mat4=config->BP4->calBP();
 
 						BP_mat=BP_mat0/2.-BP_mat4/2.;
+
+						if(has_val_bmode)
+						{
+							vector<number> C_ell_bmode;
+							status = block->get_val<vector<number> >(config->input_section_name_bmode, name_in, C_ell_bmode);
+
+							config->BP0->setInput_single_withExtrapolation(logell,C_ell_bmode);
+							BP_mat0_BB=config->BP0->calBP();
+
+							config->BP4->setInput_single_withExtrapolation(logell,C_ell_bmode);
+							BP_mat4_BB=config->BP4->calBP();
+
+							BP_mat= BP_mat + BP_mat0_BB/2. + BP_mat4_BB/2.;
+						}
+
 					}
 					number nBands=BP_mat.rows;
 					vector<number> BP_vec(nBands);
