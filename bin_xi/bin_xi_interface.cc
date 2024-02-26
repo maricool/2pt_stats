@@ -130,7 +130,7 @@ extern "C" {
 
 	// here is the setup function. Cosmosis runs this only once and sends the address to a structure with
 	// all that is needed to execute. 
-	void *setup(cosmosis::DataBlock *options) 
+	void * setup(cosmosis::DataBlock * options, cosmosis::DataBlock * block) 
 	{
 		//options reads the ini file
 		//define config here and then read from options the relevant input quantities

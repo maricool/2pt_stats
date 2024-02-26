@@ -610,7 +610,6 @@ extern "C"
 
 							BP_mat= BP_mat + BP_mat0_BB/2. + BP_mat4_BB/2.;
 						}
-
 					}
 					number nBands=BP_mat.rows;
 					vector<number> BP_vec(nBands);
