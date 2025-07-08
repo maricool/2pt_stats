@@ -92,7 +92,7 @@ extern "C"
   		status=options->get_val<number>(sectionName, string("theta_min") , config->thetamin);
   		if (status) 
 		{
-			clog<<"Could not load theta_min to BandPower"<<endl;
+			clog<<"Could not load theta_min to BandPower, "<<endl;
 			clog<<"setting it to the default value of 1 arcmins"<<endl;
 			config->thetamin=1.;
 		}
@@ -110,7 +110,7 @@ extern "C"
 		else
 			clog<<"got the value of theta_max="<<config->thetamax<<endl;
 
-		//change them to randian
+		//change them to radians
 		config->thetamin*=arcmin;
 		config->thetamax*=arcmin;
 
@@ -123,7 +123,7 @@ extern "C"
 		if (status)
 		{
 			number l_min,l_max;
-			clog<<"Could not load l_min_max_file to BandPower"; 
+			clog<<"Could not load l_min_max_file to BandPower, "; 
 			clog<<"going to look for nBands and l_min and l_max instead"<<endl;
 			//number of bands
 		    status=options->get_val<int>(sectionName, string("nBands"), config->nBands);
@@ -227,8 +227,9 @@ extern "C"
 		status=options->get_val<number>(sectionName, string("Delta_x"), Delta_x);
 		if(status)
 		{
-			clog<<"Could not find Delta_x, setting to default:"<<endl;
+			clog<<"Could not find Delta_x, setting to default:";
 			Delta_x=0.5;
+			clog<<Delta_x<<endl;
 		}
 		else
 			clog<<"Delta_theta is:"<<Delta_x<<endl;
@@ -252,7 +253,7 @@ extern "C"
 		else
 			clog<<"response function type is:"<<Response_function_type<<endl;
 
-		// use analytic solution for ?
+		// use analytic solution for the bandpower filter
 		bool Analytic=true; //set this to be read from the ini file
 		int Analytic_int;
 		status=options->get_val<int>(sectionName, string("Analytic"), Analytic_int);
@@ -277,188 +278,160 @@ extern "C"
 		string type_str;
 		bool real=false;
 
-
-		//testing W apodised
-/*
-		BandPower_W *W = new BandPower_W();
-		int bessel_order=0;
-		noApodise=true;
-		clog<<"going to initialize W "<<endl;
-		//now testing W
-		//Delta_x=0.5;
-		W->initialize(config->thetamin,config->thetamax,Response_function_type,
-				config->l_min_vec,config->l_max_vec,bessel_order,noApodise,Delta_x,Analytic,LLOW,LHIGH,NLBINS);
-		FolderName="../cosmosis_in_out/BandPower_results/";
-		W->setBandPower_WName(FolderName,"g","W_noAp");
-		for(int b=0; b<config->nBands; b++)
-		{
-			W->print_integrant(noApodise,0,105,b);
-		}
-		W->setBandPower_WName(FolderName,"g","W_Ap");
-		noApodise=false;
-		W->set_noApodise(noApodise);
-		//clog<<"!!!!!!!!!!!!!!!!!!!setting Ap_more!!!!!!!!!!!!!!!!!!"<<endl;
-		for(int b=0; b<config->nBands; b++)
-		{
-			W->print_integrant(noApodise,0,105,b);
-		}
-		exit(1);
-		*/
 		//   initialize BandPower based on the type the user asks for
 		// options are: clustering, ggl, cosmic_shear_e and cosmic_shear_b
 		status=options->get_val<string>(sectionName, string("type"), type_str);
 		if(status)
 		{
-			clog<<"Could not find the band power type to calculate, setting to default"<<endl;
+			clog<<"Could not find the band power type to calculate, setting to default: ";
+			type_str = "clustering";
+			clog<<type_str<<endl;
+		}
+
+		clog<<"band power type to calculate is:"<<type_str<<endl;
+		if(type_str=="clustering")
+		{
 			config->type=0;
+			BandPower *BP0 = new BandPower();
+			BP0->initialize(config->thetamin,config->thetamax,Response_function_type,
+					config->l_min_vec,config->l_max_vec,
+					0,noApodise,Delta_x, Analytic,
+					LLOW,
+					LHIGH,
+					NLBINS,
+					FolderName,gFileName,WFileName,real);
+			config->BP0=BP0;
+
+			//check if input section name is given in the ini file otherwise use the default
+			status=options->get_val<string>(sectionName, string("input_section_name"), config->input_section_name);
+			if (status) 
+			{
+				clog<<"Could not load input_section_name to band power,";
+				clog<<" setting to default: "<< GALAXY_CL_SECTION <<endl;
+				config->input_section_name=GALAXY_CL_SECTION;
+			}
+			else
+				clog<<"got the value of input_section_name:"<<config->input_section_name<<endl;
+		}
+		else if(type_str=="ggl")
+		{
+			config->type=2;
+			int bessel_order=2;
+			BandPower *BP2 = new BandPower();
+			BP2->initialize(config->thetamin,config->thetamax,Response_function_type,
+					config->l_min_vec,config->l_max_vec,
+					bessel_order,noApodise,Delta_x, Analytic,
+					LLOW,
+					LHIGH,
+					NLBINS,
+					FolderName,gFileName,WFileName,real);
+			config->BP2=BP2;
+			//check if input section name is given in the ini file otherwise use the default
+			status=options->get_val<string>(sectionName, string("input_section_name"), config->input_section_name);
+			if (status) 
+			{
+				clog<<"Could not load input_section_name to band power,";
+				clog<<" setting to default: "<< "galaxy_shear_cl" <<endl;
+				config->input_section_name="galaxy_shear_cl";
+			}
+			else
+				clog<<"got the value of input_section_name:"<<config->input_section_name<<endl;
+		}
+		else if(type_str=="cosmic_shear_e")
+		{
+			config->type=3;
+			BandPower *BP0 = new BandPower();
+			BP0->initialize(config->thetamin,config->thetamax,Response_function_type,
+					config->l_min_vec,config->l_max_vec,
+					0,noApodise,Delta_x, Analytic,
+					LLOW,
+					LHIGH,
+					NLBINS,
+					FolderName,gFileName,WFileName,real);
+
+			config->BP0=BP0;
+			BandPower *BP4 = new BandPower();
+			BP4->initialize(config->thetamin,config->thetamax,Response_function_type,
+					config->l_min_vec,config->l_max_vec,
+					4,noApodise,Delta_x, Analytic,
+					LLOW,
+					LHIGH,
+					NLBINS,
+					FolderName,gFileName,WFileName,real);
+			config->BP4=BP4;
+			//check if input section name is given in the ini file otherwise use the default
+			status=options->get_val<string>(sectionName, string("input_section_name"), config->input_section_name);
+			if (status) 
+			{
+				clog<<"Could not load input_section_name to band power,";
+				clog<<" setting to default: "<< SHEAR_CL_SECTION <<endl;
+				config->input_section_name=SHEAR_CL_SECTION;
+			}
+			else
+				clog<<"got the value of input_section_name:"<<config->input_section_name<<endl;
+			
+			//check if input section name for b-mode power is given, otherwise use default
+			status=options->get_val<string>(sectionName, string("input_section_name_bmode"), config->input_section_name_bmode);
+			if (status) 
+			{
+				clog<<"Could not load input_section_name_bmode to band power,";
+				clog<<" setting to default: "<< "shear_cl_b" <<endl;
+				config->input_section_name_bmode="shear_cl_b";
+			}
+			else
+				clog<<"got the value of input_section_name_bmode:"<<config->input_section_name_bmode<<endl;
+
+		}
+		else if(type_str=="cosmic_shear_b")
+		{
+			config->type=4;
+			BandPower *BP0 = new BandPower();
+			BP0->initialize(config->thetamin,config->thetamax,Response_function_type,
+					config->l_min_vec,config->l_max_vec,
+					0,noApodise,Delta_x, Analytic,
+					LLOW,
+					LHIGH,
+					NLBINS,
+					FolderName,gFileName,WFileName,real);
+			config->BP0=BP0;
+
+			BandPower *BP4 = new BandPower();
+			BP4->initialize(config->thetamin,config->thetamax,Response_function_type,
+					config->l_min_vec,config->l_max_vec,
+					4,noApodise,Delta_x, Analytic,
+					LLOW,
+					LHIGH,
+					NLBINS,
+					FolderName,gFileName,WFileName,real);
+			config->BP4=BP4;
+
+			//check if input section name is given in the ini file otherwise use the default
+			status=options->get_val<string>(sectionName, string("input_section_name"), config->input_section_name);
+			if (status) 
+			{
+				clog<<"Could not load input_section_name to band power,";
+				clog<<" setting to default: "<< SHEAR_CL_SECTION <<endl;
+				config->input_section_name=SHEAR_CL_SECTION;
+			}
+			else
+				clog<<"got the value of input_section_name:"<<config->input_section_name<<endl;
+			
+			//check if input section name for b-mode power is given, otherwise use default
+			status=options->get_val<string>(sectionName, string("input_section_name_bmode"), config->input_section_name_bmode);
+			if (status) 
+			{
+				clog<<"Could not load input_section_name_bmode to band power,";
+				clog<<" setting to default: "<< "shear_cl_b" <<endl;
+				config->input_section_name_bmode="shear_cl_b";
+			}
+			else
+				clog<<"got the value of input_section_name_bmode:"<<config->input_section_name_bmode<<endl;
 		}
 		else
 		{
-			clog<<"band power type to calculate is:"<<type_str<<endl;
-			if(type_str=="clustering")
-			{
-				config->type=0;
-				BandPower *BP0 = new BandPower();
-				BP0->initialize(config->thetamin,config->thetamax,Response_function_type,
-						config->l_min_vec,config->l_max_vec,
-						0,noApodise,Delta_x, Analytic,
-						LLOW,
-						LHIGH,
-						NLBINS,
-						FolderName,gFileName,WFileName,real);
-				config->BP0=BP0;
-
-				//check if input section name is given in the ini file otherwise use the default
-				status=options->get_val<string>(sectionName, string("input_section_name"), config->input_section_name);
-				if (status) 
-				{
-					clog<<"Could not load input_section_name to band power,";
-					clog<<" setting to default: "<< GALAXY_CL_SECTION <<endl;
-					config->input_section_name=GALAXY_CL_SECTION;
-				}
-				else
-					clog<<"got the value of input_section_name:"<<config->input_section_name<<endl;
-			}
-			else if(type_str=="ggl")
-			{
-				config->type=2;
-				int bessel_order=2;
-				BandPower *BP2 = new BandPower();
-				BP2->initialize(config->thetamin,config->thetamax,Response_function_type,
-						config->l_min_vec,config->l_max_vec,
-						bessel_order,noApodise,Delta_x, Analytic,
-						LLOW,
-						LHIGH,
-						NLBINS,
-						FolderName,gFileName,WFileName,real);
-				config->BP2=BP2;
-				//check if input section name is given in the ini file otherwise use the default
-				status=options->get_val<string>(sectionName, string("input_section_name"), config->input_section_name);
-				if (status) 
-				{
-					clog<<"Could not load input_section_name to band power,";
-					clog<<" setting to default: "<< "galaxy_shear_cl" <<endl;
-					config->input_section_name="galaxy_shear_cl";
-				}
-				else
-					clog<<"got the value of input_section_name:"<<config->input_section_name<<endl;
-			}
-			else if(type_str=="cosmic_shear_e")
-			{
-				config->type=3;
-				BandPower *BP0 = new BandPower();
-				BP0->initialize(config->thetamin,config->thetamax,Response_function_type,
-						config->l_min_vec,config->l_max_vec,
-						0,noApodise,Delta_x, Analytic,
-						LLOW,
-						LHIGH,
-						NLBINS,
-						FolderName,gFileName,WFileName,real);
-
-				config->BP0=BP0;
-				BandPower *BP4 = new BandPower();
-				BP4->initialize(config->thetamin,config->thetamax,Response_function_type,
-						config->l_min_vec,config->l_max_vec,
-						4,noApodise,Delta_x, Analytic,
-						LLOW,
-						LHIGH,
-						NLBINS,
-						FolderName,gFileName,WFileName,real);
-				config->BP4=BP4;
-				//check if input section name is given in the ini file otherwise use the default
-				status=options->get_val<string>(sectionName, string("input_section_name"), config->input_section_name);
-				if (status) 
-				{
-					clog<<"Could not load input_section_name to band power,";
-					clog<<" setting to default: "<< SHEAR_CL_SECTION <<endl;
-					config->input_section_name=SHEAR_CL_SECTION;
-				}
-				else
-					clog<<"got the value of input_section_name:"<<config->input_section_name<<endl;
-				
-				//check if input section name for b-mode power is given, otherwise use default
-				status=options->get_val<string>(sectionName, string("input_section_name_bmode"), config->input_section_name_bmode);
-				if (status) 
-				{
-					clog<<"Could not load input_section_name_bmode to band power,";
-					clog<<" setting to default: "<< "shear_cl_b" <<endl;
-					config->input_section_name_bmode="shear_cl_b";
-				}
-				else
-					clog<<"got the value of input_section_name_bmode:"<<config->input_section_name_bmode<<endl;
-
-			}
-			else if(type_str=="cosmic_shear_b")
-			{
-				config->type=4;
-				BandPower *BP0 = new BandPower();
-				BP0->initialize(config->thetamin,config->thetamax,Response_function_type,
-						config->l_min_vec,config->l_max_vec,
-						0,noApodise,Delta_x, Analytic,
-						LLOW,
-						LHIGH,
-						NLBINS,
-						FolderName,gFileName,WFileName,real);
-				config->BP0=BP0;
-
-				BandPower *BP4 = new BandPower();
-				BP4->initialize(config->thetamin,config->thetamax,Response_function_type,
-						config->l_min_vec,config->l_max_vec,
-						4,noApodise,Delta_x, Analytic,
-						LLOW,
-						LHIGH,
-						NLBINS,
-						FolderName,gFileName,WFileName,real);
-				config->BP4=BP4;
-
-				//check if input section name is given in the ini file otherwise use the default
-				status=options->get_val<string>(sectionName, string("input_section_name"), config->input_section_name);
-				if (status) 
-				{
-					clog<<"Could not load input_section_name to band power,";
-					clog<<" setting to default: "<< SHEAR_CL_SECTION <<endl;
-					config->input_section_name=SHEAR_CL_SECTION;
-				}
-				else
-					clog<<"got the value of input_section_name:"<<config->input_section_name<<endl;
-				
-				//check if input section name for b-mode power is given, otherwise use default
-				status=options->get_val<string>(sectionName, string("input_section_name_bmode"), config->input_section_name_bmode);
-				if (status) 
-				{
-					clog<<"Could not load input_section_name_bmode to band power,";
-					clog<<" setting to default: "<< "shear_cl_b" <<endl;
-					config->input_section_name_bmode="shear_cl_b";
-				}
-				else
-					clog<<"got the value of input_section_name_bmode:"<<config->input_section_name_bmode<<endl;
-			}
-			else
-			{
-				clog<<"not a recognised type, please select from: clustering, ggl, cosmic_shear_e or cosmic_shear_b"<<endl;
-				clog<<"exiting now ..."<<endl;
-				exit(1);
-			}
+			clog<<"not a recognised type, please select from: clustering, ggl, cosmic_shear_e or cosmic_shear_b"<<endl;
+			clog<<"exiting now ..."<<endl;
+			exit(1);
 		}
 		
 		clog<<"BP initialised ....."<<endl;
@@ -554,13 +527,11 @@ extern "C"
 					}
 					else if(config->type==3)
 					{
-						//config->BP0->setInput_single(logell,C_ell);
 						config->BP0->setInput_single_withExtrapolation(logell,C_ell);
 						matrix BP_mat0;
 						matrix BP_mat0_BB;
 						BP_mat0=config->BP0->calBP();
 
-						//config->BP4->setInput_single(logell,C_ell);
 						config->BP4->setInput_single_withExtrapolation(logell,C_ell);
 						matrix BP_mat4;
 						matrix BP_mat4_BB;
