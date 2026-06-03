@@ -568,6 +568,15 @@ extern "C" {
     	status = block->put_val(config->output_section_name, "theta_max", config->theta_max);
 		status = block->put_val(config->output_section_name, "input_section_name", config->input_section_name);
 
+		bool is_auto;
+		status = block->get_val(config->input_section_name, string("is_auto"), is_auto);
+		if(status)
+		{
+		   clog<<"Couldn't find the value of is_auto in "<<config->input_section_name<<", setting it to True."<<endl;
+		   is_auto=true;
+		}
+		block->put_val(config->output_section_name, "is_auto", is_auto);
+
 		
 		disable_gsl_error_handling();
 		return status;
