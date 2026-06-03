@@ -251,6 +251,8 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config_in)
     for(int n=0; n<config->nMaximum; n++)
         n_vals.push_back(n+1);
 
+    status = block->put_val<vector<int> >(config->output_section_name, string("n"), n_vals);
+    
     for (int i_bin=1; i_bin<=num_z_bin_A; i_bin++) 
     {
         for (int j_bin=1; j_bin<=num_z_bin_B; j_bin++) 
@@ -281,6 +283,14 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config_in)
     block->put_val(config->output_section_name, "theta_max", config->theta_max);
     block->put_val(config->output_section_name, "type", config->type);
     block->put_val(config->output_section_name, "input_section_name", config->input_section_name);
+    bool is_auto;
+    status = block->get_val(config->input_section_name, string("is_auto"), is_auto);
+    if(status)
+    {
+       clog<<"Couldn't find the value of is_auto in "<<config->input_section_name<<", setting it to True."<<endl;
+       is_auto=true;
+    }
+    block->put_val(config->output_section_name, "is_auto", is_auto);
 
     disable_gsl_error_handling();
     return status;
