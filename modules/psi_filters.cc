@@ -196,7 +196,7 @@ number psi_filters::integrant(number x)
 	if (integration_type=="Wgg")
 		return ( x * gsl_sf_bessel_Jn(0,x) * U(mode,x/lmode) );	
 	else if(integration_type=="Wgm")
-		return ( x * gsl_sf_bessel_Jn(2,lmode*x) * analyticalQ(x,mode) );
+		return ( x * gsl_sf_bessel_Jn(2,x) * analyticalQ(x/lmode,mode) );
 	else if(integration_type=="Q")
 		return ( x * U(mode,x) );
 	else
